@@ -17,12 +17,20 @@ public class App extends Application {
 
     @Override
     public void start(Stage stage) throws IOException {
-        scene = new Scene(loadFXML("primary"), 640, 480);
+        // 1. Change "primary" to "login" here to set the initial screen
+        // 2. Adjust the dimensions (900x600) to match your login.fxml size
+        scene = new Scene(loadFXML("login"), 900, 600);
+
+        // Give the window a professional title
+        stage.setTitle("Kubo Property Management");
+
         stage.setScene(scene);
         stage.show();
     }
 
-    static void setRoot(String fxml) throws IOException {
+    // You will use this method later inside your LoginController
+    // to switch to the "primary" dashboard after a successful login!
+    public static void setRoot(String fxml) throws IOException {
         scene.setRoot(loadFXML(fxml));
     }
 
@@ -34,5 +42,4 @@ public class App extends Application {
     public static void main(String[] args) {
         launch();
     }
-
 }

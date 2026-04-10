@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.StackPane?>
+
+<StackPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" 
+           fx:controller="com.teamroy.Controller.AdminController" 
+           prefHeight="600.0" prefWidth="900.0" style="-fx-background-color: #f8fafc;">
+    
+    <Label text="ADMIN VIEW" style="-fx-font-size: 48px; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
+
+</StackPane>

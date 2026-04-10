@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<StackPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" 
+           fx:controller="com.teamroy.Controller.LoginController" 
+           prefHeight="600.0" prefWidth="900.0" style="-fx-background-color: #f1f5f9;">
+    
+    <VBox alignment="CENTER" spacing="20" maxWidth="350" maxHeight="400" style="-fx-background-color: white; -fx-background-radius: 8px; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 5);">
+        <padding>
+            <Insets top="40" right="40" bottom="40" left="40"/>
+        </padding>
+
+        <Label text="Welcome to Kubo" style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
+        <Label text="Please sign in to continue" style="-fx-font-size: 14px; -fx-text-fill: #64748b;"/>
+        
+        <Region prefHeight="10"/>
+
+        <TextField fx:id="usernameField" promptText="Username" style="-fx-pref-height: 40px; -fx-font-size: 14px;"/>
+        <PasswordField fx:id="passwordField" promptText="Password" style="-fx-pref-height: 40px; -fx-font-size: 14px;"/>
+        
+        <Label fx:id="errorLabel" text="" style="-fx-text-fill: #ef4444; -fx-font-size: 12px;"/>
+
+        <Button text="Login" onAction="#handleLogin" maxWidth="Infinity" style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-pref-height: 40px; -fx-font-size: 14px; -fx-font-weight: bold; -fx-cursor: hand; -fx-background-radius: 4px;"/>
+    </VBox>
+
+</StackPane>
