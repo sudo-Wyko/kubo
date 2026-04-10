@@ -115,3 +115,9 @@ DO
     UPDATE LEASE
     SET status = 'EXPIRED'
     WHERE end_date < CURRENT_DATE() and STATUS = 'ACTIVE';
+
+-- insert test users
+INSERT INTO USER_ACCOUNT (username, password_hash, role)
+VALUES ('admin', '123', 'ADMIN');
+INSERT INTO USER_ACCOUNT (username, password_hash, role)
+VALUES ('tenant', '123', 'TENANT');

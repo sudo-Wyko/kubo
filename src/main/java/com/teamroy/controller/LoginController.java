@@ -1,4 +1,4 @@
-package com.teamroy.Controller;
+package com.teamroy.controller;
 
 import com.teamroy.App;
 import javafx.fxml.FXML;
