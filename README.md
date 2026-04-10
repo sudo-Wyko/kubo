@@ -17,7 +17,7 @@ Before you start, make sure you have the following installed:
 ### 1. Clone the Repository
 
 ```bash
-git clone <your-repo-link>
+git clone https://github.com/sudo-Wyko/kubo
 cd kubo
 git checkout feature/login-screen
 ```
