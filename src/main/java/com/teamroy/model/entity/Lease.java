@@ -8,13 +8,18 @@ public class Lease {
     private int roomId;
     private LocalDate startDate;
     private LocalDate endDate;
+    private double monthlyRent;
     private String status; // 'ACTIVE', 'EXPIRED', 'TERMINATED'
 
-    public Lease(int tenantId, int roomId, LocalDate startDate, LocalDate endDate, String status) {
+    public Lease() {
+    }
+
+    public Lease(int tenantId, int roomId, LocalDate startDate, LocalDate endDate, double monthlyRent, String status) {
         this.tenantId = tenantId;
         this.roomId = roomId;
         this.startDate = startDate;
         this.endDate = endDate;
+        this.monthlyRent = monthlyRent;
         this.status = status;
     }
 
@@ -37,6 +42,10 @@ public class Lease {
 
     public LocalDate GetEndDate() {
         return endDate;
+    }
+
+    public double GetMonthlyRent() {
+        return monthlyRent;
     }
 
     public String GetStatus() {
@@ -62,6 +71,10 @@ public class Lease {
 
     public void SetEndDate(LocalDate endDate) {
         this.endDate = endDate;
+    }
+
+    public void SetMonthlyRent(double monthlyRent) {
+        this.monthlyRent = monthlyRent;
     }
 
     public void SetStatus(String status) {

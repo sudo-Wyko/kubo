@@ -1,6 +1,6 @@
 package com.teamroy.model.entity;
 
-import java.security.Timestamp;
+import java.sql.Timestamp;
 
 public class Tenant {
     private int tenantId;
@@ -11,6 +11,9 @@ public class Tenant {
     private String email;
     private double totalBalance;
     private Timestamp deletedAt;
+
+    public Tenant() {
+    }
 
     public Tenant(String firstName, String lastName, String contactNumber, String email, double totalBalance) {
         this.firstName = firstName;
@@ -78,7 +81,7 @@ public class Tenant {
         this.email = email;
     }
 
-    public void SetTotalBalancd(double totalBalance) {
+    public void SetTotalBalance(double totalBalance) {
         this.totalBalance = totalBalance;
     }
 

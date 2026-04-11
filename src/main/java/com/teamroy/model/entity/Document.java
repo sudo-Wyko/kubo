@@ -9,6 +9,9 @@ public class Document {
     private String filePath;
     private LocalDateTime uploadedAt;
 
+    public Document() {
+    }
+
     public Document(int tenantId, String title, String filePath, LocalDateTime uploadedAt) {
         this.tenantId = tenantId;
         this.title = title;

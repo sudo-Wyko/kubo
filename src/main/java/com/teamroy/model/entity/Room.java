@@ -6,13 +6,18 @@ public class Room {
     private String roomType;
     private int capacity;
     private int currentOccupancy;
+    private double price;
 
-    public Room(int roomId, String roomNumber, String roomType, int capacity, int currentOccupancy) {
+    public Room() {
+    }
+
+    public Room(int roomId, String roomNumber, String roomType, int capacity, int currentOccupancy, double price) {
         this.roomId = roomId;
         this.roomNumber = roomNumber;
         this.roomType = roomType;
         this.capacity = capacity;
         this.currentOccupancy = currentOccupancy;
+        this.price = price;
     }
 
     // -- Getters --
@@ -36,6 +41,10 @@ public class Room {
         return currentOccupancy;
     }
 
+    public double GetPrice() {
+        return price;
+    }
+
     // -- Setters --
     public void SetRoomID(int roomId) {
         this.roomId = roomId;
@@ -45,7 +54,7 @@ public class Room {
         this.roomNumber = roomNumber;
     }
 
-    public void SetRoomtType(String roomType) {
+    public void SetRoomType(String roomType) {
         this.roomType = roomType;
     }
 
@@ -55,5 +64,9 @@ public class Room {
 
     public void SetCurrentOccupancy(int currentOccupancy) {
         this.currentOccupancy = currentOccupancy;
+    }
+
+    public void SetPrice(double price) {
+        this.price = price;
     }
 }

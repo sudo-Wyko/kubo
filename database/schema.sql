@@ -121,3 +121,7 @@ INSERT INTO USER_ACCOUNT (username, password_hash, role)
 VALUES ('admin', '123', 'ADMIN');
 INSERT INTO USER_ACCOUNT (username, password_hash, role)
 VALUES ('tenant', '123', 'TENANT');
+
+-- forgot to add prices to the room
+ALTER TABLE ROOM ADD COLUMN price DECIMAL(10,2) NOT NULL DEFAULT 0.00;
+ALTER TABLE LEASE ADD COLUMN monthly_rent DECIMAL(10,2) NOT NULL;

@@ -10,6 +10,9 @@ public class MaintenanceRequest {
     private LocalDateTime reportedDate;
     private String status; // 'NEW', 'IN-PROGRESS', 'RESOLVED'
 
+    public MaintenanceRequest() {
+    }
+
     public MaintenanceRequest(int tenantId, Integer roomId, String reportDescription, LocalDateTime reportedDate,
             String status) {
         this.tenantId = tenantId;

@@ -10,6 +10,9 @@ public class Payment {
     private String paymentMethod;
     private String status; // 'PENDING', 'VERIFIED', 'FAILED'
 
+    public Payment() {
+    }
+
     public Payment(int tenantId, double amountPaid, LocalDateTime paymentDate, String paymentMethod, String status) {
         this.tenantId = tenantId;
         this.amountPaid = amountPaid;

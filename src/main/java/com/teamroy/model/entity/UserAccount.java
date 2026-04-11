@@ -6,6 +6,9 @@ public class UserAccount {
     private String passwordHash;
     private String role;
 
+    public UserAccount() {
+    }
+
     public UserAccount(String username, String passwordHash, String role) {
         this.username = username;
         this.passwordHash = passwordHash;
