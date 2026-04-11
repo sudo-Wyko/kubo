@@ -36,7 +36,7 @@ public class Document {
         return filePath;
     }
 
-    public LocalDateTime GeTimeUploadedAt() {
+    public LocalDateTime GetTimeUploadedAt() {
         return uploadedAt;
     }
 

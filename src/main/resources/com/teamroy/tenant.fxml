@@ -1,11 +1,41 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.layout.StackPane?>
 
-<StackPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" 
-           fx:controller="com.teamroy.Controller.TenantController" 
-           prefHeight="600.0" prefWidth="900.0" style="-fx-background-color: #f8fafc;">
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<BorderPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" 
+            fx:controller="com.teamroy.controller.TenantController"
+            prefHeight="720.0" prefWidth="1080.0" style="-fx-background-color: #000000;">
     
-    <Label text="TENANT VIEW" style="-fx-font-size: 48px; -fx-font-weight: bold; -fx-text-fill: #10b981;"/>
+    <left>
+        <VBox spacing="15" prefWidth="250.0" style="-fx-background-color: #000000; -fx-border-color: #333333; -fx-border-width: 0 1 0 0;">
+            <padding>
+                <Insets top="40" right="20" bottom="40" left="20"/>
+            </padding>
+            
+            <Button fx:id="btnHome" text="Home" onAction="#LoadHomeView" maxWidth="Infinity" style="-fx-background-color: transparent; -fx-text-fill: white; -fx-border-color: white; -fx-border-radius: 8; -fx-padding: 12; -fx-cursor: hand;" />
 
-</StackPane>
+            <Button fx:id="btnRooms" text="Rooms" onAction="#LoadRoomsView" maxWidth="Infinity" style="-fx-background-color: transparent; -fx-text-fill: white; -fx-border-color: white; -fx-border-radius: 8; -fx-padding: 12; -fx-cursor: hand;" />
+
+            <Button fx:id="btnPayments" text="Payments" onAction="#LoadPaymentsView" maxWidth="Infinity" style="-fx-background-color: transparent; -fx-text-fill: white; -fx-border-color: white; -fx-border-radius: 8; -fx-padding: 12; -fx-cursor: hand;" />
+
+            <Button fx:id="btnLease" text="Lease Details" onAction="#LoadLeaseView" maxWidth="Infinity" style="-fx-background-color: transparent; -fx-text-fill: white; -fx-border-color: white; -fx-border-radius: 8; -fx-padding: 12; -fx-cursor: hand;" />
+
+            <Button fx:id="btnMaintenance" text="Maintenance Requests" onAction="#LoadMaintenanceView" maxWidth="Infinity" style="-fx-background-color: transparent; -fx-text-fill: white; -fx-border-color: white; -fx-border-radius: 8; -fx-padding: 12; -fx-cursor: hand;" />
+            
+            <Region VBox.vgrow="ALWAYS" /> 
+            
+            <Button text="Account Information" onAction="#LoadAccountView" maxWidth="Infinity" style="-fx-background-color: transparent; -fx-text-fill: white; -fx-border-color: white; -fx-border-radius: 8; -fx-padding: 12; -fx-cursor: hand;" />
+        </VBox>
+    </left>
+
+    <center>
+        <StackPane fx:id="contentArea" style="-fx-background-color: #0a0a0a;">
+            <padding>
+                <Insets top="20" right="20" bottom="20" left="20"/>
+            </padding>
+            <Label text="Select a tab from the menu" style="-fx-text-fill: #444444; -fx-font-size: 24px;"/>
+        </StackPane>
+    </center>
+</BorderPane>

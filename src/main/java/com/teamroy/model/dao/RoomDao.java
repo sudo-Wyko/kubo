@@ -10,7 +10,9 @@ public interface RoomDao extends GenericDao<Room> {
 
     List<Room> GetByType(String roomType);
 
-    boolean UpdateOccupancy(int roomId);
+    boolean IncrementOccupancy(int roomId);
 
-    void UpdatePrice(int roomId, double price);
+    boolean DecrementOccupancy(int roomId);
+
+    void UpdatePrice(int roomId, double amount);
 }

@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
 
 public interface PaymentDao extends GenericDao<Payment> {
 
-    List<Payment> GetByTenantId(int tenantId);
+    List<Payment> GetByTenantID(int tenantId);
 
     List<Payment> GetByDateRange(LocalDateTime start, LocalDateTime end);
 
