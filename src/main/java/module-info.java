@@ -8,5 +8,7 @@ module com.teamroy {
     exports com.teamroy;
 
     opens com.teamroy.Controller to javafx.fxml;
+    exports com.teamroy.Model;
+    opens com.teamroy.Model to javafx.fxml;
 
 }

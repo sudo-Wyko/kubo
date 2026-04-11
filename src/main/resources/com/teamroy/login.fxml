@@ -23,7 +23,7 @@
         
         <Label fx:id="errorLabel" text="" style="-fx-text-fill: #ef4444; -fx-font-size: 12px;"/>
 
-        <Button text="Login" onAction="#handleLogin" maxWidth="Infinity" style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-pref-height: 40px; -fx-font-size: 14px; -fx-font-weight: bold; -fx-cursor: hand; -fx-background-radius: 4px;"/>
+        <Button text="Login" onAction="#handleLogin" defaultButton="true" maxWidth="Infinity" style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-pref-height: 40px; -fx-font-size: 14px; -fx-font-weight: bold; -fx-cursor: hand; -fx-background-radius: 4px;"/>
     </VBox>
 
 </StackPane>

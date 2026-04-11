@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<BorderPane xmlns="http://javafx.com/javafx/13" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.teamroy.Controller.AdminLeaseController"
+            prefHeight="600.0" prefWidth="1000.0" style="-fx-background-color: #f8fafc;">
+
+    <left>
+        <VBox prefWidth="200.0" spacing="15.0" style="-fx-background-color: #1e293b; -fx-padding: 20px;">
+            <Label text="KUBO" style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: white;"/>
+            <Separator />
+            <Button text="Dashboard" maxWidth="Infinity" style="-fx-background-color: transparent; -fx-text-fill: white; -fx-alignment: BASELINE_LEFT; -fx-font-size: 14px;"/>
+            <Button text="Rooms" onAction="#switchToRooms" maxWidth="Infinity" style="-fx-background-color: transparent; -fx-text-fill: white; -fx-alignment: BASELINE_LEFT; -fx-font-size: 14px;"/>
+            <Button text="Tenants" onAction="#switchToTenants" maxWidth="Infinity" style="-fx-background-color: transparent; -fx-text-fill: white; -fx-alignment: BASELINE_LEFT; -fx-font-size: 14px;"/>
+            <Button text="Leases" maxWidth="Infinity" style="-fx-background-color: #334155; -fx-text-fill: white; -fx-alignment: BASELINE_LEFT; -fx-font-size: 14px;"/>
+            <Button text="Maintenance" maxWidth="Infinity" style="-fx-background-color: transparent; -fx-text-fill: white; -fx-alignment: BASELINE_LEFT; -fx-font-size: 14px;"/>
+        </VBox>
+    </left>
+
+    <center>
+        <VBox spacing="20.0" style="-fx-padding: 30px;">
+
+            <Label text="Lease Management" style="-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #0f172a;"/>
+
+            <HBox spacing="15.0" alignment="CENTER_LEFT" style="-fx-background-color: white; -fx-padding: 15px; -fx-background-radius: 8px; -fx-border-color: #e2e8f0; -fx-border-radius: 8px;">
+                <TextField fx:id="searchField" promptText="Search Tenant or Room..." prefWidth="250" style="-fx-font-size: 14px; -fx-padding: 8px;"/>
+                <Label text="Status:" style="-fx-text-fill: #64748b;"/>
+                <ComboBox fx:id="filterStatus" promptText="All Statuses" prefWidth="150" style="-fx-font-size: 14px;"/>
+                <Region HBox.hgrow="ALWAYS" />
+                <Button text="+ Add New Lease" onAction="#handleAddLease" style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; -fx-padding: 10px 20px; -fx-background-radius: 5px; -fx-cursor: hand;"/>
+            </HBox>
+
+            <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" style="-fx-background-color: transparent; -fx-background: #f8fafc; -fx-border-color: transparent;">
+                <content>
+                    <FlowPane fx:id="leaseCardsContainer" hgap="20.0" vgap="20.0" style="-fx-padding: 10px;" />
+                </content>
+            </ScrollPane>
+
+        </VBox>
+    </center>
+</BorderPane>

@@ -90,8 +90,8 @@ FOR EACH ROW
 BEGIN
     UPDATE TENANT
     SET total_balance = total_balance - NEW.amount_paid
-    WHERE tenant_id = NEW.tenant_id
-END; //
+    WHERE tenant_id = NEW.tenant_id;
+END //
 DELIMITER ;
 
 -- auto increment the capacity after every new active lease
@@ -104,6 +104,8 @@ BEGIN
         UPDATE ROOM
         SET current_occupancy = current_occupancy + 1
         WHERE room_id = NEW.room_id;
+    END IF;
+END //
 
 -- dynamically check for expired leases
 SET GLOBAL event_scheduler = ON;

@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<BorderPane xmlns="http://javafx.com/javafx/13" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.teamroy.Controller.AdminTenantController"
+            prefHeight="600.0" prefWidth="1050.0" style="-fx-background-color: #f8fafc;">
+
+    <left>
+        <VBox prefWidth="200.0" spacing="15.0" style="-fx-background-color: #1e293b; -fx-padding: 20px;">
+            <Label text="KUBO" style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: white;"/>
+            <Separator />
+            <Button text="Dashboard" maxWidth="Infinity" style="-fx-background-color: transparent; -fx-text-fill: white; -fx-alignment: BASELINE_LEFT; -fx-font-size: 14px;"/>
+            <Button text="Rooms" onAction="#switchToRooms" maxWidth="Infinity" style="-fx-background-color: transparent; -fx-text-fill: white; -fx-alignment: BASELINE_LEFT; -fx-font-size: 14px;"/>
+            <Button text="Tenants" maxWidth="Infinity" style="-fx-background-color: #334155; -fx-text-fill: white; -fx-alignment: BASELINE_LEFT; -fx-font-size: 14px;"/>
+            <Button text="Leases" onAction="#switchToLeases" maxWidth="Infinity" style="-fx-background-color: transparent; -fx-text-fill: white; -fx-alignment: BASELINE_LEFT; -fx-font-size: 14px;"/>
+            <Button text="Maintenance" maxWidth="Infinity" style="-fx-background-color: transparent; -fx-text-fill: white; -fx-alignment: BASELINE_LEFT; -fx-font-size: 14px;"/>
+        </VBox>
+    </left>
+
+    <center>
+        <HBox spacing="20.0" style="-fx-padding: 30px;">
+
+            <VBox HBox.hgrow="ALWAYS" spacing="20.0">
+                <Label text="Tenant Management" style="-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #0f172a;"/>
+
+                <HBox spacing="15.0" alignment="CENTER_LEFT" style="-fx-background-color: white; -fx-padding: 15px; -fx-background-radius: 8px; -fx-border-color: #e2e8f0; -fx-border-radius: 8px;">
+                    <TextField fx:id="searchField" promptText="Search Name or Email..." prefWidth="250" style="-fx-font-size: 14px; -fx-padding: 8px;"/>
+                    <Label text="Status:" style="-fx-text-fill: #64748b;"/>
+                    <ComboBox fx:id="filterStatus" promptText="All Statuses" prefWidth="130" style="-fx-font-size: 14px;"/>
+                    <Region HBox.hgrow="ALWAYS" />
+                    <Button text="+ Add Tenant" onAction="#handleAddTenant" style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; -fx-padding: 8px 15px; -fx-background-radius: 5px; -fx-cursor: hand;"/>
+                </HBox>
+
+                <TableView fx:id="tenantTable" VBox.vgrow="ALWAYS" style="-fx-font-size: 14px; -fx-border-color: #e2e8f0; -fx-border-radius: 5px;">
+                    <columns>
+                        <TableColumn fx:id="colTenantId" text="ID" prefWidth="60"/>
+                        <TableColumn fx:id="colFullName" text="Full Name" prefWidth="180"/>
+                        <TableColumn fx:id="colRoom" text="Room" prefWidth="80"/>
+                        <TableColumn fx:id="colStatus" text="Status" prefWidth="100"/>
+                    </columns>
+                </TableView>
+            </VBox>
+
+            <VBox fx:id="sidePanel" visible="false" managed="false" prefWidth="320.0" spacing="15.0" style="-fx-background-color: white; -fx-padding: 25px; -fx-background-radius: 10px; -fx-border-color: #e2e8f0; -fx-border-radius: 10px; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 10, 0, 0, 0);">
+
+                <HBox alignment="CENTER_RIGHT">
+                    <Button text="✕" onAction="#closeSidePanel" style="-fx-background-color: transparent; -fx-text-fill: #94a3b8; -fx-font-size: 16px; -fx-font-weight: bold; -fx-cursor: hand;"/>
+                </HBox>
+
+                <VBox alignment="CENTER" spacing="5.0">
+                    <Label text="👤" style="-fx-font-size: 48px; -fx-text-fill: #cbd5e1;"/>
+                    <Label fx:id="detailName" text="Tenant Name" style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #1e293b;"/>
+                    <Label fx:id="detailStatus" text="Status" style="-fx-background-color: #f1f5f9; -fx-text-fill: #475569; -fx-padding: 3 10; -fx-background-radius: 15; -fx-font-size: 12px;"/>
+                </VBox>
+
+                <VBox alignment="CENTER" spacing="5" style="-fx-background-color: #fffbeb; -fx-padding: 10px; -fx-background-radius: 8px; -fx-border-color: #fde68a; -fx-border-radius: 8px; -fx-margin-top: 10px;">
+                    <Label text="⏱ Lease Expiry" style="-fx-font-size: 11px; -fx-text-fill: #b45309; -fx-font-weight: bold;"/>
+                    <Label fx:id="detailLeaseEnd" text="May 31, 2026" style="-fx-font-size: 14px; -fx-text-fill: #92400e; -fx-font-weight: bold;"/>
+                </VBox>
+
+                <Separator style="-fx-padding: 10 0;"/>
+
+                <Label text="Contact Information" style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #64748b;"/>
+                <Label fx:id="detailEmail" text="email@domain.com" style="-fx-font-size: 14px; -fx-text-fill: #334155;"/>
+                <Label fx:id="detailPhone" text="0912-345-6789" style="-fx-font-size: 14px; -fx-text-fill: #334155;"/>
+
+                <Separator style="-fx-padding: 10 0;"/>
+
+                <Label text="Current Stay" style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #64748b;"/>
+                <HBox spacing="10">
+                    <Label text="Room:" style="-fx-font-size: 14px; -fx-text-fill: #475569;"/>
+                    <Label fx:id="detailRoom" text="101A" style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #0f172a;"/>
+                </HBox>
+                <HBox spacing="10">
+                    <Label text="Balance:" style="-fx-font-size: 14px; -fx-text-fill: #475569;"/>
+                    <Label fx:id="detailBalance" text="₱0.00" style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #ef4444;"/>
+                </HBox>
+
+                <Region VBox.vgrow="ALWAYS" />
+
+                <Button text="Edit Profile" maxWidth="Infinity" style="-fx-background-color: #f1f5f9; -fx-text-fill: #334155; -fx-font-weight: bold; -fx-padding: 10px; -fx-cursor: hand;"/>
+                <Button text="Message Tenant" maxWidth="Infinity" style="-fx-background-color: #e0f2fe; -fx-text-fill: #0369a1; -fx-font-weight: bold; -fx-padding: 10px; -fx-cursor: hand;"/>
+            </VBox>
+
+        </HBox>
+    </center>
+</BorderPane>
