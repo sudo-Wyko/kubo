@@ -92,7 +92,7 @@ public class LeaseDaoImpl implements LeaseDao {
     }
 
     @Override
-    public List<Lease> GetByTenantId(int tenantId) {
+    public List<Lease> GetByTenantID(int tenantId) {
         List<Lease> leases = new ArrayList<>();
         String sql = "SELECT * FROM LEASE WHERE tenant_id = ? ORDER BY start_date DESC";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {

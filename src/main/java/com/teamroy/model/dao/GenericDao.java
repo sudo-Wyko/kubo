@@ -13,3 +13,6 @@ public interface GenericDao<T> {
 
     void Delete(int id);
 }
+
+
+

@@ -13,13 +13,14 @@ public class RoomDaoImpl implements RoomDao {
 
     @Override
     public void Create(Room room) {
-        String sql = "INSERT INTO ROOM (room_number, room_type, capacity, current_occupancy, price) VALUES (?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO ROOM (room_number, floor, room_type, capacity, current_occupancy, price) VALUES (?, ?, ?, ?, ?, ?)";
         try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, room.GetRoomNumber());
-            ps.setString(2, room.GetRoomType());
-            ps.setInt(3, room.GetCapacity());
-            ps.setInt(4, room.GetCurrentOccupancy());
-            ps.setDouble(5, room.GetPrice());
+            ps.setInt(2, room.GetFloor());
+            ps.setString(3, room.GetRoomType());
+            ps.setInt(4, room.GetCapacity());
+            ps.setInt(5, room.GetCurrentOccupancy());
+            ps.setDouble(6, room.GetPrice());
             ps.executeUpdate();
 
             try (ResultSet rs = ps.getGeneratedKeys()) {
@@ -62,14 +63,15 @@ public class RoomDaoImpl implements RoomDao {
 
     @Override
     public void Update(Room room) {
-        String sql = "UPDATE ROOM SET room_number=?, room_type=?, capacity=?, current_occupancy=?, price=? WHERE room_id=?";
+        String sql = "UPDATE ROOM SET room_number=?, floor=?, room_type=?, capacity=?, current_occupancy=?, price=? WHERE room_id=?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, room.GetRoomNumber());
-            ps.setString(2, room.GetRoomType());
-            ps.setInt(3, room.GetCapacity());
-            ps.setInt(4, room.GetCurrentOccupancy());
-            ps.setDouble(5, room.GetPrice());
-            ps.setInt(6, room.GetRoomID());
+            ps.setInt(2, room.GetFloor());
+            ps.setString(3, room.GetRoomType());
+            ps.setInt(4, room.GetCapacity());
+            ps.setInt(5, room.GetCurrentOccupancy());
+            ps.setDouble(6, room.GetPrice());
+            ps.setInt(7, room.GetRoomID());
             ps.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -92,6 +94,21 @@ public class RoomDaoImpl implements RoomDao {
         String sql = "SELECT * FROM ROOM WHERE room_number = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, roomNumber);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next())
+                    return ResultSetToRoom(rs);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    @Override
+    public Room GetByFloor(int floor) {
+        String sql = "SELECT * FROM ROOM WHERE floor = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, floor);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next())
                     return ResultSetToRoom(rs);

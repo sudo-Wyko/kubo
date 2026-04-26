@@ -1,18 +1,15 @@
 package com.teamroy.controller;
 
 import com.teamroy.App;
+import com.teamroy.DatabaseUtility;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 
-import java.io.FileInputStream;
-import java.io.IOException;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.util.Properties;
 
 public class LoginController {
 
@@ -22,22 +19,6 @@ public class LoginController {
     private PasswordField passwordField;
     @FXML
     private Label errorLabel;
-
-    // Use a helper method to get the connection
-    private Connection getConnection() throws Exception {
-        Properties props = new Properties();
-        // This looks for the file in your project root
-        try (FileInputStream in = new FileInputStream("config.properties")) {
-            props.load(in);
-        } catch (IOException e) {
-            throw new Exception("Could not find config.properties file!");
-        }
-
-        return DriverManager.getConnection(
-                props.getProperty("db.url"),
-                props.getProperty("db.user"),
-                props.getProperty("db.password"));
-    }
 
     @FXML
     private void handleLogin() {
@@ -49,7 +30,16 @@ public class LoginController {
             return;
         }
 
-        try (Connection conn = getConnection()) {
+        // Use the global utility instead of a local method
+        try (Connection conn = DatabaseUtility.getConnection()) {
+            if (conn == null) {
+                errorLabel.setText("Database connection failed.");
+                return;
+            }
+
+            // Note: If 'password_hash' in your DB is actually hashed (e.g., BCrypt),
+            // a direct string comparison here will fail. You'd need to hash the input
+            // first!
             String sql = "SELECT role FROM USER_ACCOUNT WHERE username = ? AND password_hash = ?";
             PreparedStatement pstmt = conn.prepareStatement(sql);
             pstmt.setString(1, username);
@@ -68,7 +58,7 @@ public class LoginController {
                 errorLabel.setText("Invalid username or password.");
             }
         } catch (Exception e) {
-            errorLabel.setText("Database error: Check config.properties");
+            errorLabel.setText("Database error: " + e.getMessage());
             e.printStackTrace();
         }
     }

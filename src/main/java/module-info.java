@@ -1,7 +1,7 @@
 module com.teamroy {
     requires javafx.controls;
-    requires javafx.fxml;
-    requires java.sql;
+    requires transitive javafx.fxml;
+    requires transitive java.sql;
 
     opens com.teamroy to javafx.fxml;
 

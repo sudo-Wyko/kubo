@@ -5,7 +5,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 public interface LeaseDao extends GenericDao<Lease> {
-    List<Lease> GetByTenantId(int tenantId);
+    List<Lease> GetByTenantID(int tenantId);
 
     Lease GetActiveLeaseByRoom(int roomId);
 

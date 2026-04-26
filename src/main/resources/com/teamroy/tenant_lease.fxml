@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.control.Label?>
+
+<StackPane style="-fx-background-color: #000000;" xmlns="http://javafx.com/javafx/17">
+    <Label text="Home Screen - Work in Progress" style="-fx-text-fill: white; -fx-font-size: 24px;"/>
+</StackPane>
