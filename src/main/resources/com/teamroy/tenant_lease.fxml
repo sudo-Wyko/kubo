@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.teamroy.controller.TenantLeaseController"
+      spacing="16" style="-fx-background-color: #0a0a0a; -fx-padding: 24;">
+
+    <Label fx:id="emptyLabel" managed="false" visible="false"
+           text="No active lease found." style="-fx-text-fill: #94a3b8; -fx-font-size: 18px;"/>
+
+    <VBox fx:id="leaseBox" spacing="12" managed="false" visible="false">
+        <Label fx:id="startLabel" style="-fx-text-fill: white;"/>
+        <Label fx:id="endLabel" style="-fx-text-fill: white;"/>
+        <Label fx:id="rentLabel" style="-fx-text-fill: #fcd34d; -fx-font-size: 20px; -fx-font-weight: bold;"/>
+        <Label fx:id="statusBadge" text="STATUS" style="-fx-text-fill: white; -fx-padding: 4 12; -fx-background-radius: 10;"/>
+
+        <StackPane prefHeight="180" maxWidth="Infinity"
+                   style="-fx-background-color: #111827; -fx-border-color: #334155; -fx-border-style: dashed;">
+            <Label text="Lease Agreement Document" style="-fx-text-fill: #94a3b8;"/>
+        </StackPane>
+        <Button text="View Document" onAction="#handleViewDocument"
+                style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold;"/>
+    </VBox>
+</VBox>

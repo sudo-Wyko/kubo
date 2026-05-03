@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.teamroy.controller.AdminPaymentController"
+            style="-fx-background-color: #0a0a0a;">
+    <padding>
+        <Insets top="16" right="20" bottom="20" left="20"/>
+    </padding>
+
+    <top>
+        <VBox spacing="12">
+            <StackPane prefHeight="140" style="-fx-background-color: #111827; -fx-background-radius: 8;">
+                <Label text="Payments overview — chart placeholder"
+                       style="-fx-text-fill: #94a3b8; -fx-font-size: 14px;"/>
+            </StackPane>
+
+            <HBox spacing="12" alignment="CENTER_LEFT">
+                <Label text="Payments" style="-fx-text-fill: white; -fx-font-size: 20px; -fx-font-weight: bold;"/>
+                <ComboBox fx:id="tenantFilterCombo" promptText="All Tenants" prefWidth="180"/>
+                <ComboBox fx:id="statusFilterCombo" promptText="By Status" prefWidth="160"/>
+                <DatePicker fx:id="monthFilterPicker" promptText="By Month"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Button text="Export CSV" onAction="#handleExportPaymentsCsv"
+                        style="-fx-background-color: #334155; -fx-text-fill: white;"/>
+                <Button text="Export JSON" onAction="#handleExportPaymentsJson"
+                        style="-fx-background-color: #334155; -fx-text-fill: white;"/>
+                <Button text="+ Add New Payment" onAction="#handleAddPayment"
+                        styleClass="btn-primary"
+                        style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold;"/>
+            </HBox>
+        </VBox>
+    </top>
+
+    <center>
+        <VBox spacing="10">
+            <HBox spacing="12" alignment="CENTER_LEFT">
+                <VBox spacing="8" HBox.hgrow="ALWAYS"
+                      style="-fx-background-color: #78350f; -fx-padding: 14; -fx-background-radius: 10;">
+                    <Label text="Pending volume" style="-fx-text-fill: #fcd34d; -fx-font-weight: bold;"/>
+                    <Label fx:id="pendingCardLabel" text="₱0.00"
+                           style="-fx-text-fill: white; -fx-font-size: 18px; -fx-font-weight: bold;"/>
+                </VBox>
+                <VBox spacing="8" HBox.hgrow="ALWAYS"
+                      style="-fx-background-color: #14532d; -fx-padding: 14; -fx-background-radius: 10;">
+                    <Label text="Verified volume" style="-fx-text-fill: #bbf7d0; -fx-font-weight: bold;"/>
+                    <Label fx:id="verifiedCardLabel" text="₱0.00"
+                           style="-fx-text-fill: white; -fx-font-size: 18px; -fx-font-weight: bold;"/>
+                </VBox>
+                <VBox spacing="8" HBox.hgrow="ALWAYS"
+                      style="-fx-background-color: #7f1d1d; -fx-padding: 14; -fx-background-radius: 10;">
+                    <Label text="Failed volume" style="-fx-text-fill: #fecaca; -fx-font-weight: bold;"/>
+                    <Label fx:id="failedCardLabel" text="₱0.00"
+                           style="-fx-text-fill: white; -fx-font-size: 18px; -fx-font-weight: bold;"/>
+                </VBox>
+            </HBox>
+
+            <TableView fx:id="paymentTable" VBox.vgrow="ALWAYS" style="-fx-background-color: #111827;">
+                <columns>
+                    <TableColumn fx:id="colPaymentId" text="Payment ID" prefWidth="90"/>
+                    <TableColumn fx:id="colTenant" text="Tenant" prefWidth="160"/>
+                    <TableColumn fx:id="colAmount" text="Amount" prefWidth="120"/>
+                    <TableColumn fx:id="colDate" text="Date" prefWidth="140"/>
+                    <TableColumn fx:id="colMethod" text="Method" prefWidth="120"/>
+                    <TableColumn fx:id="colStatus" text="Status" prefWidth="120"/>
+                    <TableColumn fx:id="colActions" text="Actions" prefWidth="140"/>
+                </columns>
+            </TableView>
+
+            <HBox alignment="CENTER_LEFT" spacing="8" style="-fx-padding: 8; -fx-background-color: #111827; -fx-background-radius: 6;">
+                <Label text="Verified total (filtered):" style="-fx-text-fill: #cbd5f5; -fx-font-weight: bold;"/>
+                <Label fx:id="verifiedTotalLabel" text="₱0.00" style="-fx-text-fill: #34d399; -fx-font-size: 16px; -fx-font-weight: bold;"/>
+            </HBox>
+        </VBox>
+    </center>
+</BorderPane>

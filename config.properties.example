@@ -1,0 +1,6 @@
+# Copy this file to config.properties (same folder as pom.xml) and fill in real values.
+# config.properties is gitignored — never commit passwords.
+
+db.url=jdbc:mysql://localhost:3306/kubo_db
+db.user=root
+db.password=YOUR_MYSQL_PASSWORD_HERE

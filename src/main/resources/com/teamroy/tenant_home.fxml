@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.teamroy.controller.TenantHomeController"
+            style="-fx-background-color: #0a0a0a;">
+
+    <top>
+        <HBox spacing="24" alignment="TOP_LEFT" style="-fx-padding: 0 0 16 0;">
+            <VBox spacing="16" HBox.hgrow="ALWAYS">
+                <Label fx:id="greetingLabel" text="Welcome!"
+                       style="-fx-text-fill: white; -fx-font-size: 26px; -fx-font-weight: bold;"/>
+
+                <VBox spacing="12" style="-fx-background-color: #111827; -fx-padding: 18; -fx-background-radius: 10;">
+                    <Label text="Rent Overview" style="-fx-text-fill: #94a3b8; -fx-font-weight: bold;"/>
+                    <Label fx:id="balanceLabel" text="₱0.00"
+                           style="-fx-text-fill: #f87171; -fx-font-size: 36px; -fx-font-weight: bold;"/>
+                    <Label fx:id="dueDateLabel" text="Rent due by —"
+                           style="-fx-text-fill: #cbd5f5;"/>
+                    <Button fx:id="payNowButton" text="Pay Now" onAction="#handlePayNow"
+                            style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10 18;"/>
+                </VBox>
+            </VBox>
+
+            <VBox spacing="16" prefWidth="280">
+                <VBox spacing="10" style="-fx-background-color: #111827; -fx-padding: 16; -fx-background-radius: 10;">
+                    <Label text="Announcements" style="-fx-text-fill: white; -fx-font-weight: bold;"/>
+                    <VBox fx:id="announcementsBox" spacing="8"/>
+                </VBox>
+
+                <VBox spacing="10" style="-fx-background-color: #111827; -fx-padding: 16; -fx-background-radius: 10;">
+                    <Label text="Quick Actions" style="-fx-text-fill: white; -fx-font-weight: bold;"/>
+                    <Button text="Pay Rent" onAction="#handleQuickPayRent" maxWidth="Infinity"
+                            style="-fx-background-color: #1f2937; -fx-text-fill: white; -fx-border-color: #334155;"/>
+                    <Button text="New Maintenance Request" onAction="#handleQuickMaintenance" maxWidth="Infinity"
+                            style="-fx-background-color: #1f2937; -fx-text-fill: white; -fx-border-color: #334155;"/>
+                    <Button text="View Lease" onAction="#handleQuickLease" maxWidth="Infinity"
+                            style="-fx-background-color: #1f2937; -fx-text-fill: white; -fx-border-color: #334155;"/>
+                </VBox>
+            </VBox>
+        </HBox>
+    </top>
+
+    <center>
+        <HBox spacing="20" alignment="TOP_CENTER">
+            <VBox spacing="10" HBox.hgrow="ALWAYS">
+                <Label text="My Maintenance Requests" style="-fx-text-fill: white; -fx-font-weight: bold;"/>
+                <TableView fx:id="maintenanceTable" prefHeight="320" VBox.vgrow="ALWAYS">
+                    <columns>
+                        <TableColumn fx:id="colMaintDescription" text="Description" prefWidth="220"/>
+                        <TableColumn fx:id="colMaintDate" text="Date" prefWidth="120"/>
+                        <TableColumn fx:id="colMaintStatus" text="Status" prefWidth="120"/>
+                    </columns>
+                </TableView>
+            </VBox>
+
+            <VBox spacing="10" prefWidth="360" HBox.hgrow="ALWAYS">
+                <Label text="My Recent Activity" style="-fx-text-fill: white; -fx-font-weight: bold;"/>
+                <ListView fx:id="activityList" prefHeight="320" VBox.vgrow="ALWAYS"/>
+            </VBox>
+        </HBox>
+    </center>
+</BorderPane>

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.teamroy.controller.TenantPaymentsController"
+      spacing="16" style="-fx-background-color: #0a0a0a;">
+    <padding>
+        <Insets top="10" right="10" bottom="10" left="10"/>
+    </padding>
+
+    <HBox alignment="CENTER_LEFT" spacing="16">
+        <Label fx:id="balanceSummaryLabel" text="Current Balance: ₱0.00"
+               style="-fx-text-fill: white; -fx-font-size: 18px; -fx-font-weight: bold;"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button text="+ Submit Payment" onAction="#handleSubmitPayment"
+                style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold;"/>
+    </HBox>
+
+    <TableView fx:id="paymentsTable" VBox.vgrow="ALWAYS">
+        <columns>
+            <TableColumn fx:id="colPayDate" text="Date" prefWidth="160"/>
+            <TableColumn fx:id="colPayAmount" text="Amount" prefWidth="140"/>
+            <TableColumn fx:id="colPayMethod" text="Method" prefWidth="140"/>
+            <TableColumn fx:id="colPayStatus" text="Status" prefWidth="140"/>
+        </columns>
+    </TableView>
+</VBox>

@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.chart.BarChart?>
+<?import javafx.scene.chart.CategoryAxis?>
+<?import javafx.scene.chart.NumberAxis?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<ScrollPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.teamroy.controller.AdminDashboardController"
+            fitToWidth="true" style="-fx-background-color: transparent;">
+    <VBox spacing="16" style="-fx-background-color: #0a0a0a; -fx-padding: 16;">
+        <HBox spacing="12">
+            <!-- Occupancy card -->
+            <VBox spacing="8" prefWidth="300" style="-fx-background-color: #111827; -fx-padding: 14; -fx-background-radius: 10;">
+                <Label text="Occupancy overview" style="-fx-text-fill: #94a3b8; -fx-font-weight: bold;"/>
+                <Label fx:id="lblTotalRooms" text="Total rooms: 0" style="-fx-text-fill: white;"/>
+                <Label fx:id="lblOccupiedRooms" text="Occupied rooms: 0" style="-fx-text-fill: white;"/>
+                <Label fx:id="lblAvailableBeds" text="Available beds: 0" style="-fx-text-fill: #bbf7d0;"/>
+            </VBox>
+
+            <!-- Revenue chart -->
+            <VBox spacing="8" prefWidth="360" style="-fx-background-color: #111827; -fx-padding: 12; -fx-background-radius: 10;" HBox.hgrow="ALWAYS">
+                <Label text="Revenue overview" style="-fx-text-fill: #94a3b8; -fx-font-weight: bold;"/>
+                <BarChart fx:id="revenueChart" legendVisible="true" prefHeight="220" animated="false">
+                    <xAxis><CategoryAxis label="Month"/></xAxis>
+                    <yAxis><NumberAxis label="Verified (sum)"/></yAxis>
+                </BarChart>
+            </VBox>
+
+            <!-- Quick actions -->
+            <VBox spacing="10" prefWidth="260" style="-fx-background-color: #111827; -fx-padding: 14; -fx-background-radius: 10;">
+                <Label text="Quick actions" style="-fx-text-fill: #94a3b8; -fx-font-weight: bold;"/>
+                <Button text="Add tenant" maxWidth="Infinity" onAction="#handleAddTenant"
+                        style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold;"/>
+                <Button text="Create lease" maxWidth="Infinity" onAction="#handleCreateLease"
+                        style="-fx-background-color: #1f2937; -fx-text-fill: white; -fx-border-color: #334155;"/>
+                <Button text="Add room" maxWidth="Infinity" onAction="#handleAddRoom"
+                        style="-fx-background-color: #1f2937; -fx-text-fill: white; -fx-border-color: #334155;"/>
+            </VBox>
+        </HBox>
+
+        <HBox spacing="12">
+            <VBox fx:id="maintenanceCard" spacing="8" prefWidth="440" style="-fx-background-color: #111827; -fx-padding: 14; -fx-background-radius: 10; -fx-cursor: hand;"
+                  onMouseClicked="#handleMaintenanceCardClick">
+                <Label text="Maintenance requests" style="-fx-text-fill: white; -fx-font-weight: bold;"/>
+                <Label fx:id="lblMaintNew" text="NEW: 0" style="-fx-text-fill: #fcd34d;"/>
+                <Label fx:id="lblMaintProgress" text="IN-PROGRESS: 0" style="-fx-text-fill: #f97316;"/>
+                <Label text="Click card to open maintenance board" style="-fx-text-fill: #64748b;"/>
+            </VBox>
+
+            <VBox spacing="8" prefWidth="520" style="-fx-background-color: #111827; -fx-padding: 14; -fx-background-radius: 10;" HBox.hgrow="ALWAYS">
+                <Label text="Notable events • leases ending soon (≤30 days)" style="-fx-text-fill: white; -fx-font-weight: bold;"/>
+                <ListView fx:id="expiringLeaseList" prefHeight="170"/>
+            </VBox>
+        </HBox>
+
+        <HBox spacing="12" VBox.vgrow="ALWAYS">
+            <VBox spacing="8" prefWidth="520" style="-fx-background-color: #111827; -fx-padding: 14; -fx-background-radius: 10;" HBox.hgrow="ALWAYS">
+                <Label text="Recent activity • last payments" style="-fx-text-fill: white; -fx-font-weight: bold;"/>
+                <ListView fx:id="recentActivityList" prefHeight="210" VBox.vgrow="SOMETIMES"/>
+            </VBox>
+
+            <VBox spacing="10" prefWidth="360">
+                <Label text="Announcements" style="-fx-text-fill: white; -fx-font-weight: bold;"/>
+                <VBox fx:id="announcementsBox" spacing="10" style="-fx-background-color: #111827; -fx-padding: 14; -fx-background-radius: 10;">
+                </VBox>
+            </VBox>
+        </HBox>
+    </VBox>
+</ScrollPane>
