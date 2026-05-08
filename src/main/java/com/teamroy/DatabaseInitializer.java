@@ -25,7 +25,7 @@ public class DatabaseInitializer {
         try (Connection dbConn = DriverManager.getConnection(newDbUrl, user, pass);
              Statement dbStmt = dbConn.createStatement()) {
             String sqlScript = new String(Files.readAllBytes(Paths.get("database/schema.sql")));
-            sqlScript = sqlScript.replace("DELIMITER //", "");
+            sqlScript = sqlScript.replace("DELIMITER    //", "");
             sqlScript = sqlScript.replace("DELIMITER ;", "");
             sqlScript = sqlScript.replace("//", ";");
             dbStmt.execute(sqlScript);

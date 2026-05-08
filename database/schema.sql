@@ -194,7 +194,7 @@ DELIMITER ;
 DELIMITER //
 
 CREATE TRIGGER after_tenant_lease_update
-AFTER UPDATE ON TENANT
+AFTER UPDATE ON LEASE
 FOR EACH ROW
 BEGIN
     -- Assuming you have a column named lease_status
@@ -207,7 +207,7 @@ END //
 DELIMITER ;
 
 INSERT INTO USER_ACCOUNT (username, password_hash, role)
-VALUES ('admin', '240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f1979c67f', 'ADMIN');
+VALUES ('admin', '240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9', 'ADMIN');
 INSERT INTO USER_ACCOUNT (username, password_hash, role)
 VALUES ('tenant', '240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f1979c67f', 'TENANT');
 
