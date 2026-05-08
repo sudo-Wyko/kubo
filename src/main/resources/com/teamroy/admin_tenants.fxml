@@ -5,29 +5,30 @@
 
 <BorderPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="com.teamroy.controller.AdminTenantController"
-            style="-fx-background-color: #0a0a0a;">
+            styleClass="content-view page-root">
     <padding><Insets top="12" bottom="16" left="16" right="16"/></padding>
 
     <top>
-        <HBox spacing="10" alignment="CENTER_LEFT" style="-fx-padding: 0 0 12 0;">
-            <TextField fx:id="searchField" promptText="Search by name" prefWidth="200"/>
-            <ComboBox fx:id="roomFilterCombo" promptText="By Room" prefWidth="160"/>
-            <ComboBox fx:id="statusFilterCombo" promptText="By Status" prefWidth="160"/>
+        <HBox spacing="10" alignment="CENTER_LEFT" styleClass="page-toolbar">
+            <Label text="Tenants" styleClass="page-title"/>
+            <TextField fx:id="searchField" promptText="Search by name" prefWidth="200" styleClass="form-control"/>
+            <ComboBox fx:id="roomFilterCombo" promptText="By Room" prefWidth="160" styleClass="form-control"/>
+            <ComboBox fx:id="statusFilterCombo" promptText="By Status" prefWidth="160" styleClass="form-control"/>
             <Region HBox.hgrow="ALWAYS"/>
             <Button text="Export CSV" onAction="#handleExportCsv"
-                    style="-fx-background-color: #1f2937; -fx-text-fill: white; -fx-border-color: #334155;"/>
+                    styleClass="secondary-button"/>
             <Button text="Import Tenants (CSV)" onAction="#handleImportCsv"
-                    style="-fx-background-color: #1f2937; -fx-text-fill: white; -fx-border-color: #334155;"/>
+                    styleClass="secondary-button"/>
             <Button text="+ Add New Tenant" onAction="#handleAddTenant"
-                    style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold;"/>
+                    styleClass="primary-button"/>
         </HBox>
     </top>
 
     <center>
-        <SplitPane dividerPositions="0.6" style="-fx-background-color: transparent;">
-            <VBox spacing="10" style="-fx-padding: 0 8 0 0;">
-                <Label text="Active tenants" style="-fx-text-fill: white; -fx-font-weight: bold;"/>
-                <TableView fx:id="tenantTable" prefHeight="520" VBox.vgrow="ALWAYS">
+        <SplitPane dividerPositions="0.6" styleClass="split-pane-clean">
+            <VBox spacing="10" style="-fx-padding: 0 8 0 0;" styleClass="card">
+                <Label text="Active tenants" styleClass="card-title"/>
+                <TableView fx:id="tenantTable" prefHeight="520" VBox.vgrow="ALWAYS" styleClass="table-clean">
                     <columns>
                         <TableColumn fx:id="colAvatar" text="" prefWidth="60"/>
                         <TableColumn fx:id="colName" text="Tenant name" prefWidth="170"/>
@@ -40,38 +41,38 @@
                 </TableView>
             </VBox>
 
-            <ScrollPane fitToWidth="true">
-                <VBox fx:id="detailPanel" spacing="12" style="-fx-padding: 12;">
+            <ScrollPane fitToWidth="true" styleClass="main-scroll-pane">
+                <VBox fx:id="detailPanel" spacing="12" styleClass="card">
                     <HBox spacing="14" alignment="TOP_LEFT">
                         <StackPane prefWidth="80" prefHeight="80"
-                                   style="-fx-background-color: #1f2937; -fx-background-radius: 40;">
+                                   styleClass="avatar-circle">
                             <Label fx:id="detailInitials" text="TN"
-                                   style="-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: white;"/>
+                                   styleClass="avatar-initials"/>
                         </StackPane>
                         <VBox spacing="6">
-                            <Label fx:id="detailName" text="—" style="-fx-text-fill: white; -fx-font-size: 22px; -fx-font-weight: bold;"/>
-                            <Label fx:id="detailEmail" text="" style="-fx-text-fill: #cbd5f5;" wrapText="true"/>
-                            <Label fx:id="detailContact" text="" style="-fx-text-fill: #cbd5f5;" wrapText="true"/>
-                            <Label fx:id="detailAddedDate" text="Added: —" style="-fx-text-fill: #64748b;"/>
+                            <Label fx:id="detailName" text="—" styleClass="page-title"/>
+                            <Label fx:id="detailEmail" text="" styleClass="card-subtitle" wrapText="true"/>
+                            <Label fx:id="detailContact" text="" styleClass="card-subtitle" wrapText="true"/>
+                            <Label fx:id="detailAddedDate" text="Added: —" styleClass="card-subtitle"/>
                         </VBox>
                     </HBox>
 
-                    <Label fx:id="detailBalance" text="Total Balance: ₱0.00" style="-fx-text-fill: white; -fx-font-size: 18px; -fx-font-weight: bold;"/>
-                    <Label fx:id="detailRentStatus" text="Rent status: —" style="-fx-text-fill: #fcd34d;"/>
-                    <Label fx:id="detailNextDue" text="Next due: —" style="-fx-text-fill: #bbf7d0;"/>
+                    <Label fx:id="detailBalance" text="Total Balance: ₱0.00" styleClass="card-title"/>
+                    <Label fx:id="detailRentStatus" text="Rent status: —" styleClass="dashboard-warn"/>
+                    <Label fx:id="detailNextDue" text="Next due: —" styleClass="dashboard-positive"/>
 
-                    <VBox spacing="6" style="-fx-background-color: #111827; -fx-padding: 12; -fx-background-radius: 10;">
-                        <Label text="Room / lease snapshot" style="-fx-text-fill: #94a3b8; -fx-font-weight: bold;"/>
-                        <Label fx:id="detailRoomNumber" style="-fx-text-fill: white;" text="Room: —"/>
-                        <Label fx:id="detailRoomType" style="-fx-text-fill: #cbd5f5;" text="Type: —"/>
-                        <Label fx:id="detailLeaseStatus" style="-fx-text-fill: #93c5fd;" text="Lease status: —"/>
+                    <VBox spacing="6" styleClass="card card-compact">
+                        <Label text="Room / lease snapshot" styleClass="card-subtitle"/>
+                        <Label fx:id="detailRoomNumber" styleClass="row-description" text="Room: —"/>
+                        <Label fx:id="detailRoomType" styleClass="card-subtitle" text="Type: —"/>
+                        <Label fx:id="detailLeaseStatus" styleClass="card-subtitle" text="Lease status: —"/>
                     </VBox>
 
                     <HBox spacing="10">
                         <Button text="Edit" onAction="#handleEditTenant" prefWidth="100"
-                                style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold;"/>
+                                styleClass="primary-button"/>
                         <Button text="Remove" onAction="#handleRemoveTenant" prefWidth="100"
-                                style="-fx-background-color: #7f1d1d; -fx-text-fill: white; -fx-font-weight: bold;"/>
+                                styleClass="logout-button"/>
                     </HBox>
                 </VBox>
             </ScrollPane>
@@ -79,9 +80,9 @@
     </center>
 
     <bottom>
-        <VBox spacing="8" style="-fx-padding: 14 0 0 0;">
-            <ToggleButton fx:id="archivedToggle" text="Show archived tenants"/>
-            <TableView fx:id="archivedTable" prefHeight="180" visible="false" managed="false">
+        <VBox spacing="8" style="-fx-padding: 14 0 0 0;" styleClass="card card-compact">
+            <ToggleButton fx:id="archivedToggle" text="Show archived tenants" styleClass="secondary-button"/>
+            <TableView fx:id="archivedTable" prefHeight="180" visible="false" managed="false" styleClass="table-clean">
                 <columns>
                     <TableColumn fx:id="archColName" text="Tenant" prefWidth="220"/>
                     <TableColumn fx:id="archColEmail" text="Email" prefWidth="200"/>

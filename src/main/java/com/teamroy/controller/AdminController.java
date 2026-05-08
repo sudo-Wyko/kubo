@@ -1,5 +1,6 @@
 package com.teamroy.controller;
 
+import com.teamroy.App;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -26,33 +27,32 @@ public class AdminController {
     private Button btnPayments;
     @FXML
     private Button btnMaintenance;
+    @FXML
+    private Button btnLogout;
 
-    private final String DEFAULT_STYLE =
-            "-fx-background-color: transparent; -fx-text-fill: white; -fx-border-color: white; "
-                    + "-fx-border-radius: 8; -fx-padding: 12; -fx-cursor: hand;";
-    private final String ACTIVE_STYLE =
-            "-fx-background-color: #333333; -fx-text-fill: white; -fx-border-color: white; "
-                    + "-fx-border-radius: 8; -fx-padding: 12; -fx-cursor: hand;";
+    private static final String ACTIVE_CLASS = "nav-button-active";
 
     @FXML
     private void initialize() {
-        SwitchView("admin_dashboard.fxml", btnDashboard);
+        switchView("admin_dashboard.fxml", btnDashboard);
     }
 
-    private void SetActiveButton(Button activeButton) {
+    private void setActiveButton(Button activeButton) {
         List<Button> allButtons =
                 Arrays.asList(btnDashboard, btnTenants, btnRooms, btnLeases, btnPayments, btnMaintenance);
         for (Button btn : allButtons) {
             if (btn != null) {
-                btn.setStyle(DEFAULT_STYLE);
+                btn.getStyleClass().remove(ACTIVE_CLASS);
             }
         }
         if (activeButton != null) {
-            activeButton.setStyle(ACTIVE_STYLE);
+            if (!activeButton.getStyleClass().contains(ACTIVE_CLASS)) {
+                activeButton.getStyleClass().add(ACTIVE_CLASS);
+            }
         }
     }
 
-    private void SwitchView(String fxmlFileName, Button targetButton) {
+    private void switchView(String fxmlFileName, Button targetButton) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/teamroy/" + fxmlFileName));
             Parent view = loader.load();
@@ -62,7 +62,7 @@ public class AdminController {
             }
             contentArea.getChildren().clear();
             contentArea.getChildren().add(view);
-            SetActiveButton(targetButton);
+            setActiveButton(targetButton);
         } catch (IOException e) {
             System.err.println("Could not load view: " + fxmlFileName);
             e.printStackTrace();
@@ -70,32 +70,43 @@ public class AdminController {
     }
 
     @FXML
-    void LoadDashboardView() {
-        SwitchView("admin_dashboard.fxml", btnDashboard);
+    private void loadDashboardView() {
+        switchView("admin_dashboard.fxml", btnDashboard);
     }
 
     @FXML
-    void LoadTenantsView() {
-        SwitchView("admin_tenants.fxml", btnTenants);
+    private void loadTenantsView() {
+        switchView("admin_tenants.fxml", btnTenants);
     }
 
     @FXML
-    void LoadRoomsView() {
-        SwitchView("admin_rooms.fxml", btnRooms);
+    private void loadRoomsView() {
+        switchView("admin_rooms.fxml", btnRooms);
     }
 
     @FXML
-    void LoadLeasesView() {
-        SwitchView("admin_leases.fxml", btnLeases);
+    private void loadLeasesView() {
+        switchView("admin_leases.fxml", btnLeases);
     }
 
     @FXML
-    void LoadPaymentsView() {
-        SwitchView("admin_payments.fxml", btnPayments);
+    private void loadPaymentsView() {
+        switchView("admin_payments.fxml", btnPayments);
     }
 
     @FXML
-    void LoadMaintenanceView() {
-        SwitchView("admin_maintenance.fxml", btnMaintenance);
+    public void loadMaintenanceView() {
+        switchView("admin_maintenance.fxml", btnMaintenance);
+    }
+
+    @FXML
+    private void handleLogout() {
+        try {
+            App.setRoot("login");
+        } catch (IOException e) {
+            System.err.println("Failed to navigate to login");
+            e.printStackTrace();
+        }
     }
 }
+

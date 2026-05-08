@@ -6,31 +6,30 @@
 
 <BorderPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="com.teamroy.controller.AdminPaymentController"
-            style="-fx-background-color: #0a0a0a;">
+            styleClass="content-view page-root">
     <padding>
         <Insets top="16" right="20" bottom="20" left="20"/>
     </padding>
 
     <top>
         <VBox spacing="12">
-            <StackPane prefHeight="140" style="-fx-background-color: #111827; -fx-background-radius: 8;">
+            <StackPane prefHeight="140" styleClass="card card-compact">
                 <Label text="Payments overview — chart placeholder"
-                       style="-fx-text-fill: #94a3b8; -fx-font-size: 14px;"/>
+                       styleClass="card-subtitle"/>
             </StackPane>
 
-            <HBox spacing="12" alignment="CENTER_LEFT">
-                <Label text="Payments" style="-fx-text-fill: white; -fx-font-size: 20px; -fx-font-weight: bold;"/>
-                <ComboBox fx:id="tenantFilterCombo" promptText="All Tenants" prefWidth="180"/>
-                <ComboBox fx:id="statusFilterCombo" promptText="By Status" prefWidth="160"/>
-                <DatePicker fx:id="monthFilterPicker" promptText="By Month"/>
+            <HBox spacing="12" alignment="CENTER_LEFT" styleClass="page-toolbar">
+                <Label text="Payments" styleClass="page-title"/>
+                <ComboBox fx:id="tenantFilterCombo" promptText="All Tenants" prefWidth="180" styleClass="form-control"/>
+                <ComboBox fx:id="statusFilterCombo" promptText="By Status" prefWidth="160" styleClass="form-control"/>
+                <DatePicker fx:id="monthFilterPicker" promptText="By Month" styleClass="form-control"/>
                 <Region HBox.hgrow="ALWAYS"/>
                 <Button text="Export CSV" onAction="#handleExportPaymentsCsv"
-                        style="-fx-background-color: #334155; -fx-text-fill: white;"/>
+                        styleClass="secondary-button"/>
                 <Button text="Export JSON" onAction="#handleExportPaymentsJson"
-                        style="-fx-background-color: #334155; -fx-text-fill: white;"/>
+                        styleClass="secondary-button"/>
                 <Button text="+ Add New Payment" onAction="#handleAddPayment"
-                        styleClass="btn-primary"
-                        style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold;"/>
+                        styleClass="primary-button"/>
             </HBox>
         </VBox>
     </top>
@@ -38,27 +37,22 @@
     <center>
         <VBox spacing="10">
             <HBox spacing="12" alignment="CENTER_LEFT">
-                <VBox spacing="8" HBox.hgrow="ALWAYS"
-                      style="-fx-background-color: #78350f; -fx-padding: 14; -fx-background-radius: 10;">
-                    <Label text="Pending volume" style="-fx-text-fill: #fcd34d; -fx-font-weight: bold;"/>
-                    <Label fx:id="pendingCardLabel" text="₱0.00"
-                           style="-fx-text-fill: white; -fx-font-size: 18px; -fx-font-weight: bold;"/>
+                <VBox spacing="8" HBox.hgrow="ALWAYS" styleClass="card dashboard-stat pending-stat">
+                    <Label text="Pending volume" styleClass="card-subtitle"/>
+                    <Label fx:id="pendingCardLabel" text="₱0.00" styleClass="card-title"/>
                 </VBox>
-                <VBox spacing="8" HBox.hgrow="ALWAYS"
-                      style="-fx-background-color: #14532d; -fx-padding: 14; -fx-background-radius: 10;">
-                    <Label text="Verified volume" style="-fx-text-fill: #bbf7d0; -fx-font-weight: bold;"/>
-                    <Label fx:id="verifiedCardLabel" text="₱0.00"
-                           style="-fx-text-fill: white; -fx-font-size: 18px; -fx-font-weight: bold;"/>
+                <VBox spacing="8" HBox.hgrow="ALWAYS" styleClass="card dashboard-stat verified-stat">
+                    <Label text="Verified volume" styleClass="card-subtitle"/>
+                    <Label fx:id="verifiedCardLabel" text="₱0.00" styleClass="card-title"/>
                 </VBox>
-                <VBox spacing="8" HBox.hgrow="ALWAYS"
-                      style="-fx-background-color: #7f1d1d; -fx-padding: 14; -fx-background-radius: 10;">
-                    <Label text="Failed volume" style="-fx-text-fill: #fecaca; -fx-font-weight: bold;"/>
-                    <Label fx:id="failedCardLabel" text="₱0.00"
-                           style="-fx-text-fill: white; -fx-font-size: 18px; -fx-font-weight: bold;"/>
+                <VBox spacing="8" HBox.hgrow="ALWAYS" styleClass="card dashboard-stat failed-stat">
+                    <Label text="Failed volume" styleClass="card-subtitle"/>
+                    <Label fx:id="failedCardLabel" text="₱0.00" styleClass="card-title"/>
                 </VBox>
             </HBox>
 
-            <TableView fx:id="paymentTable" VBox.vgrow="ALWAYS" style="-fx-background-color: #111827;">
+            <VBox styleClass="card" VBox.vgrow="ALWAYS">
+            <TableView fx:id="paymentTable" VBox.vgrow="ALWAYS" styleClass="table-clean">
                 <columns>
                     <TableColumn fx:id="colPaymentId" text="Payment ID" prefWidth="90"/>
                     <TableColumn fx:id="colTenant" text="Tenant" prefWidth="160"/>
@@ -70,10 +64,11 @@
                 </columns>
             </TableView>
 
-            <HBox alignment="CENTER_LEFT" spacing="8" style="-fx-padding: 8; -fx-background-color: #111827; -fx-background-radius: 6;">
-                <Label text="Verified total (filtered):" style="-fx-text-fill: #cbd5f5; -fx-font-weight: bold;"/>
-                <Label fx:id="verifiedTotalLabel" text="₱0.00" style="-fx-text-fill: #34d399; -fx-font-size: 16px; -fx-font-weight: bold;"/>
+            <HBox alignment="CENTER_LEFT" spacing="8" styleClass="card card-compact">
+                <Label text="Verified total (filtered):" styleClass="card-subtitle"/>
+                <Label fx:id="verifiedTotalLabel" text="₱0.00" styleClass="balance-label"/>
             </HBox>
+            </VBox>
         </VBox>
     </center>
 </BorderPane>

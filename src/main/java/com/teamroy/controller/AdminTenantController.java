@@ -1,6 +1,7 @@
 package com.teamroy.controller;
 
 import com.teamroy.CurrencyUtil;
+import com.teamroy.ConnectionManager;
 
 import com.teamroy.model.dao.LeaseDaoImpl;
 import com.teamroy.model.dao.MaintenanceRequestDaoImpl;
@@ -35,14 +36,11 @@ import javafx.stage.Stage;
 import javafx.util.Duration;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
-import java.util.Properties;
 import java.util.stream.Collectors;
 
 public class AdminTenantController {
@@ -113,17 +111,6 @@ public class AdminTenantController {
 
     private PauseTransition searchPause;
 
-    private Connection openConnection() throws Exception {
-        Properties props = new Properties();
-        try (FileInputStream in = new FileInputStream("config.properties")) {
-            props.load(in);
-        }
-        return DriverManager.getConnection(
-                props.getProperty("db.url"),
-                props.getProperty("db.user"),
-                props.getProperty("db.password"));
-    }
-
     private Room sentinelAllRooms() {
         Room r = new Room();
         r.SetRoomID(-1);
@@ -134,12 +121,13 @@ public class AdminTenantController {
     @FXML
     private void initialize() {
         try {
-            conn = openConnection();
+            conn = ConnectionManager.getConnection();
             tenantDao = new TenantDaoImpl(conn);
             leaseDao = new LeaseDaoImpl(conn);
             roomDao = new RoomDaoImpl(conn);
             maintenanceDao = new MaintenanceRequestDaoImpl(conn);
         } catch (Exception ex) {
+            System.err.println("Failed to initialize tenants view: " + ex.getMessage());
             ex.printStackTrace();
             return;
         }

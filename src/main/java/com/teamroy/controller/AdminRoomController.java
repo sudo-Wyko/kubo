@@ -1,6 +1,7 @@
 package com.teamroy.controller;
 
 import com.teamroy.CurrencyUtil;
+import com.teamroy.ConnectionManager;
 import com.teamroy.model.dao.MaintenanceRequestDaoImpl;
 import com.teamroy.model.dao.RoomDaoImpl;
 import com.teamroy.model.entity.MaintenanceRequest;
@@ -28,13 +29,10 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
-import java.io.FileInputStream;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
-import java.util.Properties;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -106,24 +104,14 @@ public class AdminRoomController {
 
     private final PauseTransition searchDebounce = new PauseTransition(Duration.millis(300));
 
-    private Connection openConnection() throws Exception {
-        Properties props = new Properties();
-        try (FileInputStream in = new FileInputStream("config.properties")) {
-            props.load(in);
-        }
-        return DriverManager.getConnection(
-                props.getProperty("db.url"),
-                props.getProperty("db.user"),
-                props.getProperty("db.password"));
-    }
-
     @FXML
     private void initialize() {
         try {
-            conn = openConnection();
+            conn = ConnectionManager.getConnection();
             roomDao = new RoomDaoImpl(conn);
             maintenanceDao = new MaintenanceRequestDaoImpl(conn);
         } catch (Exception ex) {
+            System.err.println("Failed to initialize rooms view: " + ex.getMessage());
             ex.printStackTrace();
             return;
         }

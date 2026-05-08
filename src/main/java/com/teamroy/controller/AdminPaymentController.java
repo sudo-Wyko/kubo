@@ -1,6 +1,7 @@
 package com.teamroy.controller;
 
 import com.teamroy.CurrencyUtil;
+import com.teamroy.ConnectionManager;
 import com.teamroy.model.dao.PaymentDaoImpl;
 import com.teamroy.model.dao.TenantDaoImpl;
 import com.teamroy.model.entity.Payment;
@@ -27,10 +28,8 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -38,7 +37,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.stream.Collectors;
 
 public class AdminPaymentController {
@@ -83,17 +81,6 @@ public class AdminPaymentController {
     private final ImportExportService importExportService = new ImportExportService();
     private final Map<Integer, String> tenantNameCache = new HashMap<>();
 
-    private Connection getConnection() throws Exception {
-        Properties props = new Properties();
-        try (FileInputStream in = new FileInputStream("config.properties")) {
-            props.load(in);
-        }
-        return DriverManager.getConnection(
-                props.getProperty("db.url"),
-                props.getProperty("db.user"),
-                props.getProperty("db.password"));
-    }
-
     private Tenant createAllTenantsOption() {
         Tenant sentinel = new Tenant();
         sentinel.SetTenantID(-1);
@@ -105,11 +92,12 @@ public class AdminPaymentController {
     @FXML
     private void initialize() {
         try {
-            conn = getConnection();
+            conn = ConnectionManager.getConnection();
             paymentDao = new PaymentDaoImpl(conn);
             tenantDao = new TenantDaoImpl(conn);
             paymentService = new PaymentService(conn);
         } catch (Exception ex) {
+            System.err.println("Failed to initialize payments view: " + ex.getMessage());
             ex.printStackTrace();
             return;
         }

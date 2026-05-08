@@ -1,6 +1,7 @@
 package com.teamroy.controller;
 
 import com.teamroy.App;
+import com.teamroy.ConnectionManager;
 import com.teamroy.PasswordUtil;
 import com.teamroy.SessionManager;
 import com.teamroy.model.dao.TenantDaoImpl;
@@ -12,13 +13,14 @@ import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.sql.Connection;
-import java.sql.DriverManager;
-import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class LoginController {
+
+    private static final Logger LOGGER = Logger.getLogger(LoginController.class.getName());
 
     @FXML
     private TextField usernameField;
@@ -27,25 +29,19 @@ public class LoginController {
     @FXML
     private Label errorLabel;
 
-    // Use a helper method to get the connection
-    private Connection getConnection() throws Exception {
-        Properties props = new Properties();
-        // This looks for the file in your project root
-        try (FileInputStream in = new FileInputStream("config.properties")) {
-            props.load(in);
+    @FXML
+    private void handleSignupLink() {
+        try {
+            App.setRoot("signup");
         } catch (IOException e) {
-            throw new Exception("Could not find config.properties file!");
+            errorLabel.setText("Could not load signup page.");
+            LOGGER.log(Level.SEVERE, "Failed to load signup view.", e);
         }
-
-        return DriverManager.getConnection(
-                props.getProperty("db.url"),
-                props.getProperty("db.user"),
-                props.getProperty("db.password"));
     }
 
     @FXML
     private void handleLogin() {
-        String username = usernameField.getText();
+        String username = usernameField.getText().trim();
         String password = passwordField.getText();
 
         if (username.isBlank() || password.isBlank()) {
@@ -55,34 +51,56 @@ public class LoginController {
 
         SessionManager.clear();
 
-        try (Connection conn = getConnection()) {
-            UserAccountDaoImpl userDao = new UserAccountDaoImpl(conn);
-            UserAccount user = userDao.GetByUsername(username);
-            String hashedPassword = PasswordUtil.hash(password);
+        try {
+            // Use ConnectionManager which handles automatic database initialization
+            Connection conn = ConnectionManager.getConnection();
+            try {
+                UserAccountDaoImpl userDao = new UserAccountDaoImpl(conn);
+                UserAccount user = userDao.GetByUsername(username);
 
-            if (user != null && hashedPassword.equals(user.GetPassword())) {
-                SessionManager.setCurrentUser(user);
+                if (user != null) {
+                    String hashedPassword = PasswordUtil.hash(password);
+                    String storedPassword = user.GetPassword();
 
-                String role = user.GetRole();
-                if ("TENANT".equalsIgnoreCase(role)) {
-                    TenantDaoImpl tenantDao = new TenantDaoImpl(conn);
-                    Tenant tenant = tenantDao.GetByUserID(user.GetUserID());
-                    SessionManager.setCurrentTenant(tenant);
+                    if (hashedPassword.equals(storedPassword)) {
+                        SessionManager.setCurrentUser(user);
+
+                        String role = user.GetRole();
+
+                        if ("TENANT".equalsIgnoreCase(role)) {
+                            TenantDaoImpl tenantDao = new TenantDaoImpl(conn);
+                            Tenant tenant = tenantDao.GetByUserID(user.GetUserID());
+                            SessionManager.setCurrentTenant(tenant);
+                        } else {
+                            SessionManager.setCurrentTenant(null);
+                        }
+
+                        if ("ADMIN".equalsIgnoreCase(role)) {
+                            App.setRoot("admin");
+                        } else {
+                            App.setRoot("tenant");
+                        }
+                    } else {
+                        errorLabel.setText("Invalid username or password.");
+                    }
                 } else {
-                    SessionManager.setCurrentTenant(null);
+                    errorLabel.setText("Invalid username or password.");
                 }
-
-                if ("ADMIN".equalsIgnoreCase(role)) {
-                    App.setRoot("admin");
-                } else {
-                    App.setRoot("tenant");
+            } finally {
+                if (conn != null && !conn.isClosed()) {
+                    conn.close();
                 }
-            } else {
-                errorLabel.setText("Invalid username or password.");
             }
+        } catch (RuntimeException e) {
+            if (e.getMessage() != null && e.getMessage().contains("Failed to connect to database")) {
+                errorLabel.setText("Database error: Could not initialize database. Check your MySQL server.");
+            } else {
+                errorLabel.setText("Database error: " + e.getMessage());
+            }
+            LOGGER.log(Level.SEVERE, "Login failed due to database runtime error.", e);
         } catch (Exception e) {
-            errorLabel.setText("Database error: Check config.properties");
-            e.printStackTrace();
+            errorLabel.setText("An unexpected error occurred: " + e.getMessage());
+            LOGGER.log(Level.SEVERE, "Login failed unexpectedly.", e);
         }
     }
 }

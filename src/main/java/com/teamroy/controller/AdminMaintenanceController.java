@@ -1,5 +1,6 @@
 package com.teamroy.controller;
 
+import com.teamroy.ConnectionManager;
 import com.teamroy.model.dao.MaintenanceRequestDaoImpl;
 import com.teamroy.model.dao.RoomDaoImpl;
 import com.teamroy.model.dao.TenantDaoImpl;
@@ -15,16 +16,13 @@ import javafx.scene.control.ListCell;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
-import java.io.FileInputStream;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.stream.Collectors;
 
 public class AdminMaintenanceController {
@@ -50,17 +48,6 @@ public class AdminMaintenanceController {
     private RoomDaoImpl roomDao;
     private final Map<Integer, String> tenantNameCache = new HashMap<>();
 
-    private Connection getConnection() throws Exception {
-        Properties props = new Properties();
-        try (FileInputStream in = new FileInputStream("config.properties")) {
-            props.load(in);
-        }
-        return DriverManager.getConnection(
-                props.getProperty("db.url"),
-                props.getProperty("db.user"),
-                props.getProperty("db.password"));
-    }
-
     private Room createAllRoomsOption() {
         Room sentinel = new Room();
         sentinel.SetRoomID(-1);
@@ -71,11 +58,12 @@ public class AdminMaintenanceController {
     @FXML
     private void initialize() {
         try {
-            conn = getConnection();
+            conn = ConnectionManager.getConnection();
             maintenanceDao = new MaintenanceRequestDaoImpl(conn);
             tenantDao = new TenantDaoImpl(conn);
             roomDao = new RoomDaoImpl(conn);
         } catch (Exception ex) {
+            System.err.println("Failed to initialize maintenance view: " + ex.getMessage());
             ex.printStackTrace();
             return;
         }

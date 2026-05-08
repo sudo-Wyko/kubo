@@ -90,8 +90,8 @@ FOR EACH ROW
 BEGIN
     UPDATE TENANT
     SET total_balance = total_balance - NEW.amount_paid
-    WHERE tenant_id = NEW.tenant_id
-END; //
+    WHERE tenant_id = NEW.tenant_id;
+END //
 DELIMITER ;
 
 -- auto increment the capacity after every new active lease
@@ -104,6 +104,8 @@ BEGIN
         UPDATE ROOM
         SET current_occupancy = current_occupancy + 1
         WHERE room_id = NEW.room_id;
+    END IF;
+END //
 
 -- dynamically check for expired leases
 SET GLOBAL event_scheduler = ON;
@@ -116,11 +118,8 @@ DO
     SET status = 'EXPIRED'
     WHERE end_date < CURRENT_DATE() and STATUS = 'ACTIVE';
 
--- insert test users
-INSERT INTO USER_ACCOUNT (username, password_hash, role)
-VALUES ('admin', '123', 'ADMIN');
-INSERT INTO USER_ACCOUNT (username, password_hash, role)
-VALUES ('tenant', '123', 'TENANT');
+-- Admin account is created by DatabaseInitializer.java with proper password hashing
+-- Test tenant account (if needed, can be created manually in the app)
 
 -- forgot to add prices to the room
 ALTER TABLE ROOM ADD COLUMN price DECIMAL(10,2) NOT NULL DEFAULT 0.00;

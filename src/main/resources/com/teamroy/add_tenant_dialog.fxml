@@ -4,26 +4,27 @@
 <?import javafx.scene.layout.*?>
 <VBox xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="com.teamroy.controller.AddTenantDialogController"
-      spacing="12" prefWidth="420">
+      spacing="12" prefWidth="420"
+      styleClass="content-view dialog-root card">
     <padding><Insets top="20" right="24" bottom="20" left="24"/></padding>
-    <Label fx:id="titleLabel" text="Add tenant" style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
+    <Label fx:id="titleLabel" text="Add tenant" styleClass="dialog-title"/>
     <Label text="First name *"/>
-    <TextField fx:id="firstNameField"/>
+    <TextField fx:id="firstNameField" styleClass="form-control"/>
     <Label text="Last name *"/>
-    <TextField fx:id="lastNameField"/>
+    <TextField fx:id="lastNameField" styleClass="form-control"/>
     <Label text="Contact number"/>
-    <TextField fx:id="contactField"/>
+    <TextField fx:id="contactField" styleClass="form-control"/>
     <Label text="Email"/>
-    <TextField fx:id="emailField"/>
+    <TextField fx:id="emailField" styleClass="form-control"/>
     <Separator/>
     <Label text="Username (creates tenant login)" style="-fx-text-fill: #94a3b8;"/>
-    <TextField fx:id="usernameField" promptText="Optional"/>
+    <TextField fx:id="usernameField" promptText="Optional" styleClass="form-control"/>
     <Label text="Temporary password"/>
-    <PasswordField fx:id="passwordField" promptText="Required if username is set"/>
-    <Label fx:id="errorLabel" managed="false" visible="false" wrapText="true" style="-fx-text-fill: #dc2626;"/>
+    <PasswordField fx:id="passwordField" promptText="Required if username is set" styleClass="form-control"/>
+    <Label fx:id="errorLabel" managed="false" visible="false" wrapText="true" styleClass="error-label"/>
     <HBox spacing="12" alignment="CENTER_RIGHT">
-        <Button text="Cancel" onAction="#cancel"/>
+        <Button text="Cancel" onAction="#cancel" styleClass="secondary-button"/>
         <Button fx:id="saveButton" text="Save" onAction="#save"
-                style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold;"/>
+                styleClass="primary-button"/>
     </HBox>
 </VBox>

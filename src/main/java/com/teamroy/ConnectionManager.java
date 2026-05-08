@@ -6,9 +6,12 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public final class ConnectionManager {
 
+    private static final Logger LOGGER = Logger.getLogger(ConnectionManager.class.getName());
     private static Connection connection;
 
     private ConnectionManager() {}
@@ -20,12 +23,32 @@ public final class ConnectionManager {
                 try (FileInputStream in = new FileInputStream("config.properties")) {
                     props.load(in);
                 } catch (IOException e) {
-                    throw new RuntimeException("config.properties not found in project root.", e);
+                    throw new RuntimeException("config.properties not found.", e);
                 }
-                connection = DriverManager.getConnection(
-                        props.getProperty("db.url"),
-                        props.getProperty("db.user"),
-                        props.getProperty("db.password"));
+
+                String host = props.getProperty("db.host");
+                String dbName = props.getProperty("db.name");
+                String user = props.getProperty("db.user");
+                String pass = props.getProperty("db.password");
+                String fullUrl = host + "/" + dbName;
+
+                try {
+                    // Attempt to connect normally
+                    connection = DriverManager.getConnection(fullUrl, user, pass);
+                    LOGGER.info(() -> "Connected to database: " + dbName);
+                } catch (SQLException e) {
+                    // Error Code 1049 means the database doesn't exist yet
+                    if (e.getErrorCode() == 1049) {
+                        LOGGER.info(() -> "Database not found, initializing: " + dbName);
+                        DatabaseInitializer.setupDatabase(host, dbName, user, pass);
+                        // Try connecting one more time now that it's built
+                        connection = DriverManager.getConnection(fullUrl, user, pass);
+                        LOGGER.info(() -> "Connected to newly created database: " + dbName);
+                    } else {
+                        // If it's a wrong password or server offline error, throw it
+                        throw e;
+                    }
+                }
             }
             return connection;
         } catch (SQLException e) {
@@ -39,7 +62,7 @@ public final class ConnectionManager {
                 connection.close();
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOGGER.log(Level.WARNING, "Failed to close database connection.", e);
         }
     }
 }

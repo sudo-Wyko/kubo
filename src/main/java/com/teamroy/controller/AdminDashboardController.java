@@ -1,6 +1,7 @@
 package com.teamroy.controller;
 
 import com.teamroy.CurrencyUtil;
+import com.teamroy.ConnectionManager;
 import com.teamroy.model.dao.LeaseDaoImpl;
 import com.teamroy.model.dao.MaintenanceRequestDaoImpl;
 import com.teamroy.model.dao.PaymentDaoImpl;
@@ -25,19 +26,16 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 import java.io.BufferedReader;
-import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
-import java.util.Properties;
 import java.util.stream.Collectors;
 
 public class AdminDashboardController {
@@ -78,27 +76,17 @@ public class AdminDashboardController {
         this.adminController = adminController;
     }
 
-    private Connection openConnection() throws Exception {
-        Properties props = new Properties();
-        try (FileInputStream in = new FileInputStream("config.properties")) {
-            props.load(in);
-        }
-        return DriverManager.getConnection(
-                props.getProperty("db.url"),
-                props.getProperty("db.user"),
-                props.getProperty("db.password"));
-    }
-
     @FXML
     private void initialize() {
         try {
-            conn = openConnection();
+            conn = ConnectionManager.getConnection();
             roomDao = new RoomDaoImpl(conn);
             leaseDao = new LeaseDaoImpl(conn);
             tenantDao = new TenantDaoImpl(conn);
             maintenanceDao = new MaintenanceRequestDaoImpl(conn);
             paymentDao = new PaymentDaoImpl(conn);
         } catch (Exception ex) {
+            System.err.println("Failed to initialize dashboard: " + ex.getMessage());
             ex.printStackTrace();
             return;
         }
@@ -125,7 +113,7 @@ public class AdminDashboardController {
     @FXML
     private void handleMaintenanceCardClick() {
         if (adminController != null) {
-            adminController.LoadMaintenanceView();
+            adminController.loadMaintenanceView();
         }
     }
 
@@ -276,7 +264,7 @@ public class AdminDashboardController {
         if (stream == null) {
             Label missing = new Label("No announcements.txt found.");
             missing.setWrapText(true);
-            missing.setStyle("-fx-text-fill: #fca5a5;");
+            missing.getStyleClass().add("error-label");
             announcementsBox.getChildren().add(missing);
             return;
         }
@@ -289,14 +277,14 @@ public class AdminDashboardController {
                 }
                 Label lbl = new Label("• " + trimmed);
                 lbl.setWrapText(true);
-                lbl.setStyle("-fx-text-fill: #e2e8f0;");
+                lbl.getStyleClass().add("row-description");
                 announcementsBox.getChildren().add(lbl);
             }
         } catch (Exception ex) {
             ex.printStackTrace();
             Label lbl = new Label("Could not load announcements.");
             lbl.setWrapText(true);
-            lbl.setStyle("-fx-text-fill: #fca5a5;");
+            lbl.getStyleClass().add("error-label");
             announcementsBox.getChildren().add(lbl);
         }
     }

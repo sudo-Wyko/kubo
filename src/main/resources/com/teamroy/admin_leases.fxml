@@ -5,28 +5,29 @@
 
 <BorderPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="com.teamroy.controller.AdminLeaseController"
-            style="-fx-background-color: #0a0a0a;">
+            styleClass="content-view page-root">
     <padding>
         <Insets top="16" right="20" bottom="20" left="20"/>
     </padding>
     <top>
         <VBox spacing="12">
-            <Label text="Leases" style="-fx-text-fill: white; -fx-font-size: 22px; -fx-font-weight: bold;"/>
-            <HBox spacing="12" alignment="CENTER_LEFT">
-                <TextField fx:id="searchField" promptText="Search tenant or room" prefWidth="220"/>
-                <ComboBox fx:id="statusFilterCombo" promptText="Status" prefWidth="160"/>
+            <HBox spacing="12" alignment="CENTER_LEFT" styleClass="page-toolbar">
+                <Label text="Leases" styleClass="page-title"/>
+                <TextField fx:id="searchField" promptText="Search tenant or room" prefWidth="220" styleClass="form-control"/>
+                <ComboBox fx:id="statusFilterCombo" promptText="Status" prefWidth="160" styleClass="form-control"/>
                 <Region HBox.hgrow="ALWAYS"/>
                 <Button text="+ Add New Lease" onAction="#handleAddLease"
-                        style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold;"/>
+                        styleClass="primary-button"/>
             </HBox>
         </VBox>
     </top>
     <center>
         <ScrollPane fx:id="leasesScrollPane" fitToWidth="true"
-                    style="-fx-background: transparent; -fx-background-color: transparent;">
+                    styleClass="main-scroll-pane">
             <FlowPane fx:id="leasesFlowPane" hgap="16" vgap="16"
                       prefWrapLength="900"
-                      style="-fx-padding: 16 4 16 4;"/>
+                      style="-fx-padding: 16 4 16 4;"
+                      styleClass="lease-flow"/>
         </ScrollPane>
     </center>
 </BorderPane>

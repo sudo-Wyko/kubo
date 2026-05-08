@@ -8,8 +8,11 @@ import javafx.scene.Parent;
 import java.util.List;
 import java.util.Arrays;
 import java.io.IOException;
+import java.util.logging.Logger;
 
 public class TenantController {
+
+    private static final Logger LOGGER = Logger.getLogger(TenantController.class.getName());
 
     @FXML
     private StackPane contentArea;
@@ -103,6 +106,6 @@ public class TenantController {
     void LoadAccountView() {
         // You might want to load an account FXML, or use App.setRoot("login") to log
         // out
-        System.out.println("Account clicked");
+        LOGGER.fine("Account view clicked (not implemented).");
     }
 }

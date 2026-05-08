@@ -22,7 +22,15 @@ public class App extends Application {
 
     @Override
     public void start(Stage stage) throws IOException {
+        // Initialize database connection (will create database if it doesn't exist)
+        try {
+            ConnectionManager.getConnection();
+        } catch (RuntimeException e) {
+            System.err.println("Warning: Could not initialize database at startup: " + e.getMessage());
+        }
+        
         scene = new Scene(loadFXML("login"), 900, 600);
+        applyGlobalStyles(scene);
 
         stage.setTitle("Kubo Property Management");
         applyStageIcons(stage);
@@ -42,6 +50,15 @@ public class App extends Application {
             throw new IOException("Missing FXML classpath resource: /com/teamroy/" + fxmlBaseName + ".fxml");
         }
         return new FXMLLoader(location).load();
+    }
+
+    private static void applyGlobalStyles(Scene scene) {
+        URL css = App.class.getResource("/style.css");
+        if (css != null) {
+            scene.getStylesheets().add(css.toExternalForm());
+        } else {
+            System.err.println("Warning: Missing stylesheet classpath resource: /style.css");
+        }
     }
 
     private static void applyStageIcons(Stage stage) {

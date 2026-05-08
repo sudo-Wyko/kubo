@@ -1,6 +1,7 @@
 package com.teamroy.controller;
 
 import com.teamroy.CurrencyUtil;
+import com.teamroy.ConnectionManager;
 import com.teamroy.model.dao.LeaseDaoImpl;
 import com.teamroy.model.dao.RoomDaoImpl;
 import com.teamroy.model.dao.TenantDaoImpl;
@@ -30,14 +31,11 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
-import java.io.FileInputStream;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -62,25 +60,15 @@ public class AdminLeaseController {
 
     private final PauseTransition searchDebounce = new PauseTransition(Duration.millis(300));
 
-    private Connection openConnection() throws Exception {
-        Properties props = new Properties();
-        try (FileInputStream in = new FileInputStream("config.properties")) {
-            props.load(in);
-        }
-        return DriverManager.getConnection(
-                props.getProperty("db.url"),
-                props.getProperty("db.user"),
-                props.getProperty("db.password"));
-    }
-
     @FXML
     private void initialize() {
         try {
-            conn = openConnection();
+            conn = ConnectionManager.getConnection();
             leaseDao = new LeaseDaoImpl(conn);
             tenantDao = new TenantDaoImpl(conn);
             roomDao = new RoomDaoImpl(conn);
         } catch (Exception ex) {
+            System.err.println("Failed to initialize leases view: " + ex.getMessage());
             ex.printStackTrace();
             return;
         }
@@ -193,46 +181,40 @@ public class AdminLeaseController {
     }
 
     private VBox buildLeaseCard(Lease lease, String tenantName, String roomNum, boolean expiringSoon) {
-        String borderStyle =
-                "-fx-border-color: #334155; -fx-border-width: 1; -fx-background-color: #111827; "
-                        + "-fx-border-radius: 10; -fx-background-radius: 10;";
-        if (expiringSoon) {
-            borderStyle =
-                    "-fx-border-color: #f59e0b; -fx-border-width: 2; -fx-background-color: #111827; "
-                            + "-fx-border-radius: 10; -fx-background-radius: 10;";
-        }
-
         VBox card = new VBox(8);
         card.setPadding(new Insets(12));
         card.setPrefWidth(220);
         card.setMinWidth(220);
         card.setMaxWidth(220);
-        card.setStyle(borderStyle);
+        card.getStyleClass().addAll("card", "lease-card");
+        if (expiringSoon) {
+            card.getStyleClass().add("lease-card-expiring");
+        }
 
         Label nameLabel = new Label(tenantName);
-        nameLabel.setStyle("-fx-text-fill: white; -fx-font-weight: bold;");
+        nameLabel.getStyleClass().add("card-title");
         nameLabel.setWrapText(true);
 
         Label badge = leaseStatusBadge(lease);
 
         Label roomLabelUi = new Label("Room " + roomNum);
-        roomLabelUi.setStyle("-fx-text-fill: #cbd5f5;");
+        roomLabelUi.getStyleClass().add("card-subtitle");
 
         Label range = new Label(lease.GetStartDate() + " → " + lease.GetEndDate());
-        range.setStyle("-fx-text-fill: #94a3b8;");
+        range.getStyleClass().add("card-subtitle");
 
         Label rentLbl = new Label(CurrencyUtil.format(lease.GetMonthlyRent()) + " / mo");
-        rentLbl.setStyle("-fx-text-fill: #fcd34d; -fx-font-weight: bold;");
+        rentLbl.getStyleClass().add("lease-rent");
 
         Region spacer = new Region();
         VBox.setVgrow(spacer, Priority.ALWAYS);
 
         Button editBtn = new Button("Edit");
-        editBtn.setStyle("-fx-background-color: #374151; -fx-text-fill: white;");
+        editBtn.getStyleClass().add("secondary-button");
         editBtn.setOnAction(ev -> handleEdit(lease));
 
         Button termBtn = new Button("Terminate");
-        termBtn.setStyle("-fx-background-color: #7f1d1d; -fx-text-fill: white;");
+        termBtn.getStyleClass().add("danger-button");
         termBtn.setOnAction(ev -> handleTerminate(lease));
         termBtn.setDisable(!"ACTIVE".equalsIgnoreCase(lease.GetStatus()));
 
@@ -247,19 +229,16 @@ public class AdminLeaseController {
         String display = displayLeaseStatusText(lease);
         Label label = new Label(display);
 
-        String bg = "#475569";
+        label.getStyleClass().addAll("status-badge", "lease-status-badge");
         if ("ACTIVE".equals(display)) {
-            bg = "#15803d";
+            label.getStyleClass().add("badge-active");
         } else if ("PENDING".equals(display)) {
-            bg = "#2563eb";
+            label.getStyleClass().add("badge-pending");
         } else if ("TERMINATED".equals(display)) {
-            bg = "#b91c1c";
+            label.getStyleClass().add("badge-terminated");
         } else if ("EXPIRED".equals(display)) {
-            bg = "#475569";
+            label.getStyleClass().add("badge-expired");
         }
-
-        label.setStyle("-fx-text-fill: #f8fafc; -fx-padding: 4 10; -fx-background-radius: 12;"
-                + "-fx-background-color: " + bg + ";");
         return label;
     }
 
