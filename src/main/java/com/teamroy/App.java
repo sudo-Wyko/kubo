@@ -39,7 +39,6 @@ public class App extends Application {
         stage.show();
     }
 
-    /** Switch root after login (pass base name without .fxml, same as resources/com/teamroy/&lt;name&gt;.fxml). */
     public static void setRoot(String fxml) throws IOException {
         scene.setRoot(loadFXML(fxml));
     }

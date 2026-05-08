@@ -1,166 +1,203 @@
 package com.teamroy.controller;
 
-import com.teamroy.CurrencyUtil;
-import com.teamroy.SessionManager;
-import com.teamroy.model.dao.PaymentDaoImpl;
-import com.teamroy.model.dao.TenantDaoImpl;
-import com.teamroy.model.entity.Payment;
-import com.teamroy.model.entity.Tenant;
-import javafx.beans.property.ReadOnlyObjectWrapper;
-import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
-import javafx.scene.control.Label;
-import javafx.scene.control.TableCell;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
-import javafx.stage.Modality;
-import javafx.stage.Stage;
+import javafx.scene.control.*;
+import javafx.scene.layout.*;
+import javafx.geometry.Insets;
+import javafx.scene.shape.SVGPath;
+import javafx.application.Platform;
 
-import java.io.FileInputStream;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Properties;
+import java.util.Optional;
+import java.time.LocalDateTime;
+import java.sql.Connection;
+
+import com.teamroy.DatabaseUtility;
+import com.teamroy.SessionManager;
+import com.teamroy.model.entity.Payment;
+import com.teamroy.model.dao.PaymentDaoImpl;
 
 public class TenantPaymentsController {
 
-    private static final DateTimeFormatter DISPLAY = DateTimeFormatter.ofPattern("MMM d, yyyy h:mm a");
+    @FXML
+    private ComboBox<String> statusFilter;
 
     @FXML
-    private Label balanceSummaryLabel;
-    @FXML
-    private TableView<Payment> paymentsTable;
-    @FXML
-    private TableColumn<Payment, String> colPayDate;
-    @FXML
-    private TableColumn<Payment, String> colPayAmount;
-    @FXML
-    private TableColumn<Payment, String> colPayMethod;
-    @FXML
-    private TableColumn<Payment, Label> colPayStatus;
+    private FlowPane paymentGrid;
 
-    private Connection getConnection() throws Exception {
-        Properties props = new Properties();
-        try (FileInputStream in = new FileInputStream("config.properties")) {
-            props.load(in);
-        }
-        return DriverManager.getConnection(
-                props.getProperty("db.url"),
-                props.getProperty("db.user"),
-                props.getProperty("db.password"));
-    }
+    @FXML
+    private Button addPaymentBtn;
 
-    private Label buildPaymentStatusBadge(String status) {
-        Label label = new Label(status == null ? "" : status);
-        String bg = "#334155";
-        if ("PENDING".equalsIgnoreCase(status)) {
-            bg = "#ca8a04";
-        } else if ("VERIFIED".equalsIgnoreCase(status)) {
-            bg = "#15803d";
-        } else if ("FAILED".equalsIgnoreCase(status)) {
-            bg = "#b91c1c";
-        }
-        label.setStyle("-fx-background-color: " + bg
-                + "; -fx-text-fill: white; -fx-padding: 4 10; -fx-background-radius: 10;");
-        return label;
-    }
+    private Connection conn = DatabaseUtility.getConnection();
+    private PaymentDaoImpl paymentDao = new PaymentDaoImpl(conn);
+    private int currentTenantId;
 
-    private void configureTable() {
-        colPayDate.setCellValueFactory(cd -> {
-            if (cd.getValue().GetPaymentDate() == null) {
-                return new ReadOnlyObjectWrapper<>("—");
-            }
-            return new ReadOnlyObjectWrapper<>(DISPLAY.format(cd.getValue().GetPaymentDate()));
+    @FXML
+    public void initialize() {
+        currentTenantId = SessionManager.getCurrentTenantId();
+
+        statusFilter.getItems().addAll("All", "PENDING", "VERIFIED");
+        statusFilter.setValue("All");
+        statusFilter.getStyleClass().add("payments-filter");
+
+        addPaymentBtn.getStyleClass().add("payments-add-btn");
+
+        statusFilter.valueProperty().addListener((observable, oldValue, newValue) -> {
+            loadPaymentHistory();
         });
-        colPayAmount.setCellValueFactory(cd ->
-                new ReadOnlyObjectWrapper<>(CurrencyUtil.format(cd.getValue().GetAmountPaid())));
-        colPayMethod.setCellValueFactory(cd -> new ReadOnlyObjectWrapper<>(cd.getValue().GetPaymentMethod()));
 
-        colPayStatus.setCellValueFactory(cd ->
-                new ReadOnlyObjectWrapper<>(buildPaymentStatusBadge(cd.getValue().GetStatus())));
-        colPayStatus.setCellFactory(column -> new TableCell<Payment, Label>() {
-            @Override
-            protected void updateItem(Label item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty || item == null) {
-                    setGraphic(null);
-                } else {
-                    setGraphic(item);
-                }
+        loadPaymentHistory();
+    }
+
+    private void loadPaymentHistory() {
+        paymentGrid.getChildren().clear();
+
+        List<Payment> payments = paymentDao.GetByTenantID(currentTenantId);
+        String currentFilter = statusFilter.getValue();
+
+        for (Payment payment : payments) {
+            String status = payment.GetStatus() != null ? payment.GetStatus() : "PENDING";
+
+            if (!"All".equalsIgnoreCase(currentFilter) && !status.equalsIgnoreCase(currentFilter)) {
+                continue;
             }
-        });
-    }
 
-    @FXML
-    private void initialize() {
-        Tenant tenant = SessionManager.getCurrentTenant();
-        if (tenant == null) {
-            balanceSummaryLabel.setText("Current Balance: unavailable");
-            paymentsTable.setItems(FXCollections.observableArrayList());
-            return;
-        }
+            String paymentId = "P-" + payment.GetPaymentID();
+            String tenantInfo = "Tenant ID: " + payment.GetTenantID();
+            String amount = String.format("%,.2f", payment.GetAmountPaid());
+            String date = payment.GetPaymentDate() != null ? payment.GetPaymentDate().toLocalDate().toString() : "N/A";
+            String method = payment.GetPaymentMethod() != null ? payment.GetPaymentMethod() : "N/A";
 
-        configureTable();
-        reload(tenant.GetTenantID());
-    }
-
-    private void reload(int tenantId) {
-        try (Connection conn = getConnection()) {
-            TenantDaoImpl tenantDao = new TenantDaoImpl(conn);
-            Tenant refreshed = tenantDao.GetByID(tenantId);
-            double balance = refreshed != null ? refreshed.GetTotalBalance() : SessionManager.getCurrentTenant().GetTotalBalance();
-            balanceSummaryLabel.setText("Current Balance: " + CurrencyUtil.format(balance));
-
-            PaymentDaoImpl paymentDao = new PaymentDaoImpl(conn);
-            List<Payment> payments = paymentDao.GetByTenantID(tenantId);
-            paymentsTable.setItems(FXCollections.observableArrayList(payments));
-            paymentsTable.refresh();
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            balanceSummaryLabel.setText("Current Balance: error");
+            VBox card = createReceiptCard(paymentId, tenantInfo, amount, date, method, status);
+            paymentGrid.getChildren().add(card);
         }
     }
 
     @FXML
-    private void handleSubmitPayment() {
-        Tenant tenant = SessionManager.getCurrentTenant();
-        if (tenant == null) {
-            return;
-        }
+    private void handleAddPayment() {
+        Dialog<Payment> dialog = new Dialog<>();
+        dialog.setTitle("Add New Payment");
+        dialog.setHeaderText("Enter your payment details");
 
-        try {
-            Connection bootstrap = getConnection();
-            TenantDaoImpl tenantDao = new TenantDaoImpl(bootstrap);
-            Tenant refreshed = tenantDao.GetByID(tenant.GetTenantID());
-            Tenant effective = refreshed != null ? refreshed : tenant;
-            int tenantId = effective.GetTenantID();
-            bootstrap.close();
+        ButtonType saveButtonType = new ButtonType("Submit Payment", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(saveButtonType, ButtonType.CANCEL);
 
-            Connection conn = getConnection();
+        GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(10);
+        grid.setPadding(new Insets(20, 150, 10, 10));
 
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/teamroy/add_payment_dialog.fxml"));
-            Parent root = loader.load();
-            AddPaymentDialogController controller = loader.getController();
-            controller.configureTenantSubmit(conn, effective, 0.0, () -> reload(tenantId));
+        TextField amountField = new TextField();
+        amountField.setPromptText("e.g., 4500.00");
 
-            Stage stage = new Stage();
-            stage.initModality(Modality.APPLICATION_MODAL);
-            stage.setTitle("Submit payment");
-            stage.setScene(new Scene(root));
-            stage.setOnHidden(e -> {
+        ComboBox<String> methodBox = new ComboBox<>();
+        methodBox.getItems().addAll("Cash", "GCash", "Bank Transfer");
+        methodBox.setValue("GCash");
+
+        grid.add(new Label("Amount (₱):"), 0, 0);
+        grid.add(amountField, 1, 0);
+        grid.add(new Label("Method:"), 0, 1);
+        grid.add(methodBox, 1, 1);
+
+        dialog.getDialogPane().setContent(grid);
+
+        Platform.runLater(amountField::requestFocus);
+
+        dialog.setResultConverter(dialogButton -> {
+            if (dialogButton == saveButtonType) {
                 try {
-                    conn.close();
-                } catch (Exception ignored) {
-                    // ignore
+                    double amount = Double.parseDouble(amountField.getText());
+                    Payment newPayment = new Payment();
+                    newPayment.SetTenantID(currentTenantId);
+                    newPayment.SetAmountPaid(amount);
+                    newPayment.SetPaymentDate(LocalDateTime.now());
+                    newPayment.SetPaymentMethod(methodBox.getValue());
+                    newPayment.SetStatus("PENDING");
+                    return newPayment;
+                } catch (NumberFormatException e) {
+                    Alert alert = new Alert(Alert.AlertType.ERROR, "Please enter a valid numeric amount.");
+                    alert.showAndWait();
+                    return null;
                 }
-            });
-            stage.showAndWait();
-        } catch (Exception ex) {
-            ex.printStackTrace();
+            }
+            return null;
+        });
+
+        Optional<Payment> result = dialog.showAndWait();
+        result.ifPresent(payment -> {
+            paymentDao.Create(payment);
+            loadPaymentHistory();
+        });
+    }
+
+    // --- UI Generation Methods ---
+
+    private VBox createReceiptCard(String id, String tenant, String amount, String date, String method, String status) {
+        // Outer wrapper: no background, just stacks card body + torn edge
+        VBox receipt = new VBox();
+        receipt.setPrefWidth(220);
+
+        // Card body: surface color, border, rounded top corners
+        VBox cardBody = new VBox();
+        cardBody.getStyleClass().add("receipt-card");
+
+        // Coloured accent bar at top (green = verified, amber = pending)
+        Region accentBar = new Region();
+        accentBar.setPrefHeight(6);
+        if (status.equalsIgnoreCase("VERIFIED")) {
+            accentBar.getStyleClass().add("receipt-accent-verfied");
+        } else if (status.equalsIgnoreCase("PENDING")) {
+            accentBar.getStyleClass().add("receipt-accent-pending");
+        } else {
+            accentBar.getStyleClass().add("receipt-accent-failed");
         }
+
+        VBox content = new VBox(12);
+        content.setPadding(new Insets(16, 15, 16, 15));
+        content.getChildren().addAll(
+                createDataRow("Payment ID", id),
+                createDataRow("Tenant", tenant),
+                createDivider(),
+                createDataRow("Amount Paid", "\u20b1" + amount),
+                createDataRow("Date", date),
+                createDataRow("Method", method),
+                createDivider(),
+                createDataRow("Status", status));
+
+        cardBody.getChildren().addAll(accentBar, content);
+
+        // Closed polygon: zigzag top edge + solid fill below.
+        // Fill = page background (#eff1f5) so it paints over the card bottom,
+        // creating the torn-receipt illusion. Stroke = border color for the zigzag
+        // line.
+        SVGPath tornEdge = new SVGPath();
+        tornEdge.setContent(
+                "M0 10 L10 0 L20 10 L30 0 L40 10 L50 0 L60 10 L70 0 L80 10 L90 0 " +
+                        "L100 10 L110 0 L120 10 L130 0 L140 10 L150 0 L160 10 L170 0 " +
+                        "L180 10 L190 0 L200 10 L210 0 L220 10 L220 20 L0 20 Z");
+        tornEdge.setStyle("-fx-fill: #eff1f5; -fx-stroke: #dce0e8; -fx-stroke-width: 1;");
+
+        receipt.getChildren().addAll(cardBody, tornEdge);
+        return receipt;
+    }
+
+    private VBox createDataRow(String labelText, String valueText) {
+        VBox row = new VBox(2);
+
+        Label lbl = new Label(labelText);
+        lbl.getStyleClass().add("receipt-field-label");
+
+        Label val = new Label(valueText);
+        val.getStyleClass().add("receipt-field-value");
+
+        row.getChildren().addAll(lbl, val);
+        return row;
+    }
+
+    private Region createDivider() {
+        Region divider = new Region();
+        divider.getStyleClass().add("receipt-divider");
+        divider.setMaxWidth(Double.MAX_VALUE);
+        return divider;
     }
 }

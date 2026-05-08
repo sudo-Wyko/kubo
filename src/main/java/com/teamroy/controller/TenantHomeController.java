@@ -1,295 +1,216 @@
 package com.teamroy.controller;
 
-import com.teamroy.CurrencyUtil;
-import com.teamroy.SessionManager;
-import com.teamroy.model.dao.LeaseDaoImpl;
-import com.teamroy.model.dao.MaintenanceRequestDaoImpl;
-import com.teamroy.model.dao.PaymentDaoImpl;
-import com.teamroy.model.dao.TenantDaoImpl;
-import com.teamroy.model.entity.Lease;
-import com.teamroy.model.entity.MaintenanceRequest;
-import com.teamroy.model.entity.Payment;
-import com.teamroy.model.entity.Tenant;
-import javafx.beans.property.ReadOnlyObjectWrapper;
-import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
-import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.ListView;
-import javafx.scene.control.TableCell;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
-import javafx.scene.layout.VBox;
-import javafx.stage.Modality;
-import javafx.stage.Stage;
-
-import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.time.format.DateTimeFormatter;
-import java.util.Comparator;
+import javafx.scene.layout.*;
+import java.sql.*;
 import java.util.List;
-import java.util.Properties;
-import java.util.stream.Collectors;
+import java.time.format.DateTimeFormatter;
+
+import com.teamroy.DatabaseUtility;
+import com.teamroy.SessionManager;
+import com.teamroy.model.dao.MaintenanceRequestDaoImpl;
+import com.teamroy.model.dao.AnnouncementDaoImpl;
+import com.teamroy.model.dao.ActivityLogDaoImpl;
+import com.teamroy.model.entity.MaintenanceRequest;
+import com.teamroy.model.entity.Announcement;
+import com.teamroy.model.entity.ActivityLog;
+import javafx.scene.control.Button;
+import javafx.scene.Cursor;
 
 public class TenantHomeController {
 
-    private static final DateTimeFormatter PAYMENT_LINE_FORMAT = DateTimeFormatter.ofPattern("MMM d, yyyy • h:mm a");
+    @FXML
+    private Label lblWelcome;
+    @FXML
+    private Label lblRentAmount;
+    @FXML
+    private VBox maintenancePreviewList;
+    @FXML
+    private VBox announcementsList;
+    @FXML
+    private VBox activityList;
+    @FXML
+    private Button btnPayNow;
+
+    private Connection conn = DatabaseUtility.getConnection();
+
+    // Instantiate all DAOs
+    private MaintenanceRequestDaoImpl maintenanceDao = new MaintenanceRequestDaoImpl(conn);
+    private AnnouncementDaoImpl announcementDao = new AnnouncementDaoImpl(conn);
+    private ActivityLogDaoImpl activityLogDao = new ActivityLogDaoImpl(conn);
+
+    private int currentTenantId;
 
     @FXML
-    private Label greetingLabel;
-    @FXML
-    private Label balanceLabel;
-    @FXML
-    private Label dueDateLabel;
-    @FXML
-    private Button payNowButton;
-    @FXML
-    private TableView<MaintenanceRequest> maintenanceTable;
-    @FXML
-    private TableColumn<MaintenanceRequest, String> colMaintDescription;
-    @FXML
-    private TableColumn<MaintenanceRequest, String> colMaintDate;
-    @FXML
-    private TableColumn<MaintenanceRequest, Label> colMaintStatus;
-    @FXML
-    private ListView<String> activityList;
-    @FXML
-    private VBox announcementsBox;
+    public void initialize() {
+        currentTenantId = SessionManager.getCurrentTenantId();
+        System.out.println("TENANT ID: " + currentTenantId);
 
-    private TenantController parentController;
-
-    public void setParentController(TenantController parentController) {
-        this.parentController = parentController;
-    }
-
-    private Connection getConnection() throws Exception {
-        Properties props = new Properties();
-        try (FileInputStream in = new FileInputStream("config.properties")) {
-            props.load(in);
-        }
-        return DriverManager.getConnection(
-                props.getProperty("db.url"),
-                props.getProperty("db.user"),
-                props.getProperty("db.password"));
-    }
-
-    private Label buildStatusBadge(String status) {
-        Label label = new Label(status == null ? "" : status);
-        String bg = "#334155";
-        if ("PENDING".equalsIgnoreCase(status)) {
-            bg = "#ca8a04";
-        } else if ("VERIFIED".equalsIgnoreCase(status)) {
-            bg = "#15803d";
-        } else if ("FAILED".equalsIgnoreCase(status)) {
-            bg = "#b91c1c";
-        } else if ("NEW".equalsIgnoreCase(status)) {
-            bg = "#2563eb";
-        } else if ("IN-PROGRESS".equalsIgnoreCase(status) || "IN_PROGRESS".equalsIgnoreCase(status)) {
-            bg = "#ca8a04";
-        } else if ("RESOLVED".equalsIgnoreCase(status)) {
-            bg = "#15803d";
-        }
-        label.setStyle("-fx-background-color: " + bg
-                + "; -fx-text-fill: white; -fx-padding: 4 10; -fx-background-radius: 10;");
-        return label;
-    }
-
-    @FXML
-    private void initialize() {
-        loadAnnouncementsFromFile();
-
-        Tenant tenant = SessionManager.getCurrentTenant();
-        if (tenant == null) {
-            greetingLabel.setText("Welcome!");
-            balanceLabel.setText("Unavailable");
-            dueDateLabel.setText("Tenant profile not linked to this account.");
-            payNowButton.setDisable(true);
-            return;
+        if (conn != null) {
+            loadDashboardData(currentTenantId);
+        } else {
+            System.err.println("Database connection is null in TenantHomeController.");
+            lblWelcome.setText("Connection Error");
         }
 
-        try (Connection conn = getConnection()) {
-            TenantDaoImpl tenantDao = new TenantDaoImpl(conn);
-            Tenant refreshed = tenantDao.GetByID(tenant.GetTenantID());
-            if (refreshed != null) {
-                tenant = refreshed;
-            }
-
-            greetingLabel.setText("Welcome, " + tenant.GetFirstName() + "!");
-
-            double balance = tenant.GetTotalBalance();
-            balanceLabel.setText(CurrencyUtil.format(balance));
-            balanceLabel.setStyle(balance > 0
-                    ? "-fx-text-fill: #f87171; -fx-font-size: 36px; -fx-font-weight: bold;"
-                    : "-fx-text-fill: #34d399; -fx-font-size: 36px; -fx-font-weight: bold;");
-
-            LeaseDaoImpl leaseDao = new LeaseDaoImpl(conn);
-            List<Lease> leases = leaseDao.GetByTenantId(tenant.GetTenantID());
-            Lease activeLease =
-                    leases.stream()
-                            .filter(l -> l != null && "ACTIVE".equalsIgnoreCase(l.GetStatus()))
-                            .findFirst()
-                            .orElse(null);
-
-            if (activeLease == null) {
-                dueDateLabel.setText("No active lease — rent timing unavailable.");
-            } else {
-                dueDateLabel.setText("Rent due by " + activeLease.GetStartDate().plusMonths(1));
-            }
-
-            MaintenanceRequestDaoImpl maintenanceDao = new MaintenanceRequestDaoImpl(conn);
-            List<MaintenanceRequest> requests = maintenanceDao.GetByTenantID(tenant.GetTenantID());
-
-            configureMaintenanceTable();
-            maintenanceTable.setItems(FXCollections.observableArrayList(requests));
-
-            PaymentDaoImpl paymentDao = new PaymentDaoImpl(conn);
-            List<Payment> payments = paymentDao.GetByTenantID(tenant.GetTenantID());
-            List<String> activity = payments.stream()
-                    .sorted(Comparator.comparing(Payment::GetPaymentDate,
-                            Comparator.nullsLast(Comparator.naturalOrder())).reversed())
-                    .map(p -> {
-                        String when = p.GetPaymentDate() == null ? "—"
-                                : PAYMENT_LINE_FORMAT.format(p.GetPaymentDate());
-                        return when + " • " + CurrencyUtil.format(p.GetAmountPaid()) + " • "
-                                + p.GetPaymentMethod() + " • " + p.GetStatus();
-                    })
-                    .collect(Collectors.toList());
-            activityList.setItems(FXCollections.observableArrayList(activity));
-
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            greetingLabel.setText("Welcome!");
-            balanceLabel.setText("Error loading profile");
-            dueDateLabel.setText("Could not reach the database.");
-            payNowButton.setDisable(true);
+        if (btnPayNow != null) {
+            btnPayNow.setOnAction(e -> {
+                // If you want to open the dialog automatically, uncomment the next line:
+                // SessionManager.setAutoOpenPaymentDialog(true);
+                TenantController.getInstance().LoadPaymentsView();
+            });
         }
-    }
 
-    private void loadAnnouncementsFromFile() {
-        if (announcementsBox == null) {
-            return;
-        }
-        announcementsBox.getChildren().clear();
-        InputStream is = getClass().getResourceAsStream("/com/teamroy/announcements.txt");
-        if (is == null) {
-            announcementsBox.getChildren().add(new Label("(No announcements file.)"));
-            return;
-        }
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
-            String line;
-            while ((line = br.readLine()) != null) {
-                String trimmed = line.trim();
-                if (trimmed.isEmpty()) {
-                    continue;
-                }
-                Label lbl = new Label(trimmed);
-                lbl.setWrapText(true);
-                lbl.setStyle("-fx-text-fill: #cbd5f5;");
-                announcementsBox.getChildren().add(lbl);
-            }
-        } catch (IOException ex) {
-            announcementsBox.getChildren().add(new Label("Could not load announcements."));
-        }
-    }
-
-    private void configureMaintenanceTable() {
-        colMaintDescription.setCellValueFactory(cd ->
-                new ReadOnlyObjectWrapper<>(cd.getValue().GetReportDescription()));
-
-        colMaintDate.setCellValueFactory(cd -> new ReadOnlyObjectWrapper<>(
-                cd.getValue().GetReportedDate() == null ? ""
-                        : cd.getValue().GetReportedDate().toLocalDate().toString()));
-
-        colMaintStatus.setCellValueFactory(cd ->
-                new ReadOnlyObjectWrapper<>(buildStatusBadge(cd.getValue().GetStatus())));
-        colMaintStatus.setCellFactory(column -> new TableCell<MaintenanceRequest, Label>() {
-            @Override
-            protected void updateItem(Label item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty || item == null) {
-                    setGraphic(null);
-                } else {
-                    setGraphic(item);
-                }
-            }
+        // 2. Maintenance Overview -> Maintenance Tab
+        maintenancePreviewList.setCursor(Cursor.HAND); // Makes it look clickable
+        maintenancePreviewList.setOnMouseClicked(e -> {
+            TenantController.getInstance().LoadMaintenanceView();
         });
     }
 
-    @FXML
-    private void handlePayNow() {
-        Tenant tenant = SessionManager.getCurrentTenant();
-        if (tenant == null) {
-            return;
-        }
+    private void loadDashboardData(int tenantId) {
+        // 1. DYNAMIC TENANT DETAILS
+        String tenantSql = "SELECT first_name, total_balance FROM TENANT WHERE tenant_id = ?";
 
-        try {
-            Connection bootstrap = getConnection();
-            TenantDaoImpl tenantDao = new TenantDaoImpl(bootstrap);
-            Tenant refreshed = tenantDao.GetByID(tenant.GetTenantID());
-            double preset = refreshed != null ? refreshed.GetTotalBalance() : tenant.GetTotalBalance();
-            Tenant effective = refreshed != null ? refreshed : tenant;
-            bootstrap.close();
+        try (PreparedStatement ps = conn.prepareStatement(tenantSql)) {
+            ps.setInt(1, tenantId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    String name = rs.getString("first_name");
+                    double balance = rs.getDouble("total_balance");
 
-            openTenantPaymentDialog(effective, preset);
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-    }
-
-    private void openTenantPaymentDialog(Tenant tenant, double presetAmount) throws IOException {
-        Connection conn;
-        try {
-            conn = getConnection();
-        } catch (Exception ex) {
-            throw new IOException(ex);
-        }
-
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/teamroy/add_payment_dialog.fxml"));
-        Parent root = loader.load();
-        AddPaymentDialogController controller = loader.getController();
-        controller.configureTenantSubmit(conn, tenant, presetAmount, this::initialize);
-
-        Stage stage = new Stage();
-        stage.initModality(Modality.APPLICATION_MODAL);
-        stage.setTitle("Submit payment");
-        stage.setScene(new Scene(root));
-        stage.setOnHidden(e -> {
-            try {
-                conn.close();
-            } catch (Exception ignored) {
-                // ignore
+                    lblWelcome.setText("Welcome, " + (name != null ? name : "Tenant"));
+                    lblRentAmount.setText(String.format("₱ %,.2f", balance));
+                }
             }
-        });
-        stage.showAndWait();
-    }
+        } catch (SQLException e) {
+            System.err.println("Could not fetch tenant details.");
+            e.printStackTrace();
+        }
 
-    @FXML
-    private void handleQuickPayRent() {
-        if (parentController != null) {
-            parentController.LoadPaymentsView();
+        // 2. DYNAMIC MAINTENANCE PREVIEW
+        List<MaintenanceRequest> requests = maintenanceDao.GetByTenantID(tenantId);
+        maintenancePreviewList.getChildren().clear();
+
+        if (requests.isEmpty()) {
+            Label noReqs = new Label("No recent requests.");
+            noReqs.getStyleClass().add("card-subtitle");
+            maintenancePreviewList.getChildren().add(noReqs);
+        } else {
+            int limit = Math.min(requests.size(), 3);
+            for (int i = 0; i < limit; i++) {
+                MaintenanceRequest req = requests.get(i);
+
+                String title = req.GetReportDescription() != null ? req.GetReportDescription() : "Issue";
+                if (title.length() > 25)
+                    title = title.substring(0, 25) + "...";
+
+                String status = req.GetStatus() != null ? req.GetStatus() : "UNKNOWN";
+
+                HBox row = createMiniMaintenanceRow(title, status);
+                maintenancePreviewList.getChildren().add(row);
+            }
+        }
+
+        // 3. DYNAMIC ANNOUNCEMENTS
+        List<Announcement> announcements = announcementDao.GetRecentAnnouncements(5); // Fetch top 5
+        announcementsList.getChildren().clear();
+
+        if (announcements.isEmpty()) {
+            Label noAnn = new Label("No new announcements.");
+            noAnn.getStyleClass().add("card-subtitle");
+            announcementsList.getChildren().add(noAnn);
+        } else {
+            for (Announcement a : announcements) {
+                announcementsList.getChildren().add(createAnnouncementRow(a));
+            }
+        }
+
+        // 4. DYNAMIC RECENT ACTIVITY
+        List<ActivityLog> logs = activityLogDao.GetRecentByTenantID(tenantId, 5); // Fetch top 5
+        activityList.getChildren().clear();
+
+        if (logs.isEmpty()) {
+            Label noAct = new Label("No recent activity.");
+            noAct.getStyleClass().add("card-subtitle");
+            activityList.getChildren().add(noAct);
+        } else {
+            for (ActivityLog log : logs) {
+                activityList.getChildren().add(createActivityRow(log));
+            }
         }
     }
 
-    @FXML
-    private void handleQuickMaintenance() {
-        if (parentController != null) {
-            parentController.LoadMaintenanceView();
-        }
+    // --- UI Helper Methods ---
+
+    private HBox createMiniMaintenanceRow(String issue, String status) {
+        HBox row = new HBox(10);
+        row.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+
+        Label lblIssue = new Label(issue);
+        lblIssue.getStyleClass().add("row-description");
+
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+
+        Label lblStatus = new Label(status);
+        lblStatus.getStyleClass().add("status-badge");
+        String color = getStatusColor(status);
+        lblStatus.setStyle("-fx-background-color: " + color + "22; -fx-text-fill: " + color
+                + "; -fx-border-color: " + color + ";");
+
+        row.getChildren().addAll(lblIssue, spacer, lblStatus);
+        return row;
     }
 
-    @FXML
-    private void handleQuickLease() {
-        if (parentController != null) {
-            parentController.LoadLeaseView();
+    private VBox createAnnouncementRow(Announcement a) {
+        VBox row = new VBox(3);
+
+        Label lblTitle = new Label(a.GetTitle());
+        lblTitle.getStyleClass().add("announcement-title");
+
+        String dateStr = a.GetDatePosted() != null
+                ? a.GetDatePosted().format(DateTimeFormatter.ofPattern("MMM dd, yyyy"))
+                : "";
+        Label lblDate = new Label(dateStr);
+        lblDate.getStyleClass().add("card-subtitle");
+
+        Label lblMessage = new Label(a.GetMessage());
+        lblMessage.getStyleClass().add("card-subtitle");
+        lblMessage.setWrapText(true);
+
+        row.getChildren().addAll(lblTitle, lblDate, lblMessage);
+        return row;
+    }
+
+    private VBox createActivityRow(ActivityLog log) {
+        VBox row = new VBox(2);
+
+        Label lblDesc = new Label(log.GetDescription());
+        lblDesc.getStyleClass().addAll("card-subtitle", "row-description");
+        lblDesc.setWrapText(true);
+
+        String dateStr = log.GetCreatedAt() != null
+                ? log.GetCreatedAt().format(DateTimeFormatter.ofPattern("MMM dd, hh:mm a"))
+                : "";
+        Label lblDate = new Label(dateStr);
+        lblDate.getStyleClass().add("card-subtitle");
+
+        row.getChildren().addAll(lblDesc, lblDate);
+        return row;
+    }
+
+    private String getStatusColor(String status) {
+        switch (status.toUpperCase()) {
+            case "NEW":
+                return "#f59e0b";
+            case "IN-PROGRESS":
+                return "#3b82f6";
+            case "RESOLVED":
+                return "#22c55e";
+            default:
+                return "#cbd5e1";
         }
     }
 }

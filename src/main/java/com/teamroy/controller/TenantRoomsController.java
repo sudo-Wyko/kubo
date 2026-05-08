@@ -1,124 +1,122 @@
 package com.teamroy.controller;
 
-import com.teamroy.CurrencyUtil;
-import com.teamroy.SessionManager;
-import com.teamroy.model.dao.LeaseDaoImpl;
-import com.teamroy.model.dao.MaintenanceRequestDaoImpl;
+import com.teamroy.DatabaseUtility;
+import com.teamroy.model.dao.RoomDao;
 import com.teamroy.model.dao.RoomDaoImpl;
-import com.teamroy.model.entity.Lease;
-import com.teamroy.model.entity.MaintenanceRequest;
+import com.teamroy.model.dao.LeaseDao;
+import com.teamroy.model.dao.LeaseDaoImpl;
 import com.teamroy.model.entity.Room;
-import com.teamroy.model.entity.Tenant;
-import javafx.collections.FXCollections;
-import javafx.fxml.FXML;
-import javafx.scene.control.Label;
-import javafx.scene.control.ListView;
-import javafx.scene.layout.VBox;
+import com.teamroy.model.entity.Lease;
 
-import java.io.FileInputStream;
+import javafx.fxml.FXML;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
+import javafx.scene.layout.*;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+
 import java.sql.Connection;
-import java.sql.DriverManager;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
-import java.util.stream.Collectors;
 
 public class TenantRoomsController {
 
     @FXML
-    private Label emptyLabel;
+    private ComboBox<String> statusFilter;
     @FXML
-    private VBox roomCard;
-    @FXML
-    private Label roomNumberLabel;
-    @FXML
-    private Label roomTypeBadge;
-    @FXML
-    private Label occupancyLabel;
-    @FXML
-    private Label priceLabel;
-    @FXML
-    private ListView<String> maintList;
+    private FlowPane roomGrid;
 
-    private Connection getConnection() throws Exception {
-        Properties props = new Properties();
-        try (FileInputStream in = new FileInputStream("config.properties")) {
-            props.load(in);
-        }
-        return DriverManager.getConnection(
-                props.getProperty("db.url"),
-                props.getProperty("db.user"),
-                props.getProperty("db.password"));
+    private Connection conn = DatabaseUtility.getConnection();
+    private RoomDaoImpl roomDao = new RoomDaoImpl(conn);
+    private LeaseDaoImpl leaseDao = new LeaseDaoImpl(conn);
+
+    @FXML
+    public void initialize() {
+        statusFilter.getItems().addAll("All", "Available", "Full");
+        statusFilter.setValue("All");
+        statusFilter.getStyleClass().add("payments-filter");
+
+        statusFilter.valueProperty().addListener((observable, oldValue, newValue) -> {
+            loadRooms();
+        });
+
+        loadRooms();
     }
 
-    @FXML
-    private void initialize() {
-        Tenant tenant = SessionManager.getCurrentTenant();
-        if (tenant == null) {
-            showEmpty("No tenant session found.");
-            return;
-        }
+    private void loadRooms() {
+        roomGrid.getChildren().clear();
 
-        try (Connection conn = getConnection()) {
-            LeaseDaoImpl leaseDao = new LeaseDaoImpl(conn);
-            RoomDaoImpl roomDao = new RoomDaoImpl(conn);
-            MaintenanceRequestDaoImpl maintenanceDao = new MaintenanceRequestDaoImpl(conn);
+        String currentFilter = statusFilter.getValue();
+        List<Room> rooms = roomDao.GetAll();
 
-            List<Lease> leases = leaseDao.GetByTenantId(tenant.GetTenantID());
-            Lease lease = leases.stream()
-                    .filter(l -> l != null && "ACTIVE".equalsIgnoreCase(l.GetStatus()))
-                    .findFirst()
-                    .orElse(null);
+        for (Room room : rooms) {
+            List<Lease> activeLeases = leaseDao.GetActiveLeasesByRoom(room.GetRoomID());
+            int actualOccupancy = activeLeases.size();
+            boolean isAvailable = actualOccupancy < room.GetCapacity();
+            String status = isAvailable ? "Available" : "Full";
 
-            if (lease == null) {
-                showEmpty("No room assigned yet. Contact your administrator.");
-                return;
-            }
-            Room room = roomDao.GetByID(lease.GetRoomID());
-            if (room == null) {
-                showEmpty("No room assigned yet. Contact your administrator.");
-                return;
-            }
+            if ("Available".equals(currentFilter) && !isAvailable)
+                continue;
+            if ("Full".equals(currentFilter) && isAvailable)
+                continue;
 
-            emptyLabel.setVisible(false);
-            emptyLabel.setManaged(false);
-            roomCard.setVisible(true);
-            roomCard.setManaged(true);
+            String roomNum = room.GetRoomNumber();
+            String type = room.GetRoomType();
+            String price = String.format("%,.2f", room.GetPrice());
+            String residents = "Occupied (" + actualOccupancy + "/" + room.GetCapacity() + ")";
 
-            roomNumberLabel.setText("Room " + room.GetRoomNumber());
-            roomTypeBadge.setText(room.GetRoomType());
-            occupancyLabel.setText(room.GetCurrentOccupancy() + " / " + room.GetCapacity() + " beds occupied");
-            priceLabel.setText(CurrencyUtil.format(room.GetPrice()) + " / month");
-
-            List<MaintenanceRequest> open = maintenanceDao.GetByRoomID(room.GetRoomID()).stream()
-                    .filter(m -> !"RESOLVED".equalsIgnoreCase(m.GetStatus()))
-                    .collect(Collectors.toList());
-
-            List<String> rows = open.stream()
-                    .map(m -> "#" + m.GetRequestID() + " • "
-                            + (m.GetReportedDate() == null ? "—" : m.GetReportedDate().toLocalDate()) + " • "
-                            + m.GetStatus() + " — " + shorten(m.GetReportDescription()))
-                    .collect(Collectors.toList());
-
-            maintList.setItems(FXCollections.observableArrayList(rows));
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            showEmpty("Could not load room information.");
+            VBox card = createRoomCard(roomNum, type, status, price, residents);
+            roomGrid.getChildren().add(card);
         }
     }
 
-    private void showEmpty(String message) {
-        emptyLabel.setText(message);
-        emptyLabel.setVisible(true);
-        emptyLabel.setManaged(true);
-        roomCard.setVisible(false);
-        roomCard.setManaged(false);
-    }
+    private VBox createRoomCard(String roomNum, String type, String status, String price, String residents) {
+        VBox card = new VBox();
+        card.getStyleClass().add("room-card");
+        card.setPrefWidth(260);
+        card.setPrefHeight(320);
 
-    private static String shorten(String desc) {
-        if (desc == null) {
-            return "";
-        }
-        String t = desc.replace('\n', ' ').trim();
-        return t.length() > 140 ? t.substring(0, 137) + "..." : t;
+        StackPane imagePlaceholder = new StackPane();
+        imagePlaceholder.setPrefHeight(150);
+        imagePlaceholder.getStyleClass().add("room-card-image");
+
+        VBox details = new VBox(8);
+        details.setPadding(new Insets(15));
+
+        Label nameLabel = new Label("Room " + roomNum);
+        nameLabel.getStyleClass().add("room-card-title");
+
+        HBox typeStatusBox = new HBox(10);
+        typeStatusBox.setAlignment(Pos.CENTER_LEFT);
+
+        Label typeLabel = new Label(type);
+        typeLabel.getStyleClass().add("card-subtitle");
+
+        Label statusBadge = new Label(status);
+        statusBadge.getStyleClass().add("status-badge");
+        statusBadge.getStyleClass().add(
+                status.equals("Available") ? "room-status-available" : "room-status-full");
+
+        typeStatusBox.getChildren().addAll(typeLabel, statusBadge);
+
+        Label priceLabel = new Label("\u20b1" + price + "/month");
+        priceLabel.getStyleClass().add("room-card-price");
+        VBox.setMargin(priceLabel, new Insets(10, 0, 5, 0));
+
+        HBox residentBox = new HBox(8);
+        residentBox.setAlignment(Pos.CENTER_LEFT);
+
+        Label icon = new Label("\uD83D\uDC64");
+        icon.getStyleClass().add("card-subtitle");
+
+        Label residentsLabel = new Label(residents);
+        residentsLabel.getStyleClass().add("card-subtitle");
+
+        residentBox.getChildren().addAll(icon, residentsLabel);
+
+        details.getChildren().addAll(nameLabel, typeStatusBox, priceLabel, residentBox);
+        card.getChildren().addAll(imagePlaceholder, details);
+
+        return card;
     }
 }

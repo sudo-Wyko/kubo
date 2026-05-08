@@ -1,25 +1,54 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+<ScrollPane fitToWidth="true" styleClass="main-scroll-pane"
+            xmlns="http://javafx.com/javafx/17"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.teamroy.controller.TenantLeaseController">
 
-<VBox xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="com.teamroy.controller.TenantLeaseController"
-      spacing="16" style="-fx-background-color: #0a0a0a; -fx-padding: 24;">
+    <VBox spacing="20" styleClass="content-view">
+        <padding>
+            <Insets top="30" right="30" bottom="30" left="30"/>
+        </padding>
 
-    <Label fx:id="emptyLabel" managed="false" visible="false"
-           text="No active lease found." style="-fx-text-fill: #94a3b8; -fx-font-size: 18px;"/>
+        <Label text="Lease Details" styleClass="payments-header"/>
 
-    <VBox fx:id="leaseBox" spacing="12" managed="false" visible="false">
-        <Label fx:id="startLabel" style="-fx-text-fill: white;"/>
-        <Label fx:id="endLabel" style="-fx-text-fill: white;"/>
-        <Label fx:id="rentLabel" style="-fx-text-fill: #fcd34d; -fx-font-size: 20px; -fx-font-weight: bold;"/>
-        <Label fx:id="statusBadge" text="STATUS" style="-fx-text-fill: white; -fx-padding: 4 12; -fx-background-radius: 10;"/>
+        <HBox spacing="20">
 
-        <StackPane prefHeight="180" maxWidth="Infinity"
-                   style="-fx-background-color: #111827; -fx-border-color: #334155; -fx-border-style: dashed;">
-            <Label text="Lease Agreement Document" style="-fx-text-fill: #94a3b8;"/>
-        </StackPane>
-        <Button text="View Document" onAction="#handleViewDocument"
-                style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold;"/>
+            <!-- Document placeholder -->
+            <StackPane styleClass="lease-document-pane" HBox.hgrow="ALWAYS" minHeight="400">
+                <VBox alignment="CENTER" spacing="8">
+                    <Label text="&#128196;" styleClass="lease-doc-icon"/>
+                    <Label text="Lease Agreement" styleClass="card-title"/>
+                    <Label text="No document on file" styleClass="card-subtitle"/>
+                </VBox>
+            </StackPane>
+
+            <!-- Stat cards -->
+            <VBox spacing="20" prefWidth="250">
+
+                <VBox styleClass="lease-stat-card">
+                    <Label text="Start Date" styleClass="lease-stat-label"/>
+                    <Label fx:id="lblStartDate" text="..." styleClass="lease-stat-value"/>
+                </VBox>
+
+                <VBox styleClass="lease-stat-card">
+                    <Label text="End Date" styleClass="lease-stat-label"/>
+                    <Label fx:id="lblEndDate" text="..." styleClass="lease-stat-value"/>
+                </VBox>
+
+                <VBox styleClass="lease-stat-card">
+                    <Label text="Status" styleClass="lease-stat-label"/>
+                    <Label fx:id="lblStatus" text="..." styleClass="lease-stat-value"/>
+                </VBox>
+
+                <VBox styleClass="lease-stat-card">
+                    <Label text="Monthly Rent" styleClass="lease-stat-label"/>
+                    <Label fx:id="lblMonthlyRent" text="..." styleClass="lease-stat-value"/>
+                </VBox>
+
+            </VBox>
+        </HBox>
     </VBox>
-</VBox>
+</ScrollPane>

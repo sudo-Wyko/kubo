@@ -1,25 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
+
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
 
-<BorderPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="com.teamroy.controller.TenantRoomsController"
-            style="-fx-background-color: #0a0a0a;">
-    <center>
-        <VBox alignment="CENTER" spacing="16" style="-fx-padding: 24;">
-            <Label fx:id="emptyLabel" text="No room assigned yet. Contact your administrator."
-                   style="-fx-text-fill: #94a3b8; -fx-font-size: 18px;" visible="false"/>
-            <VBox fx:id="roomCard" spacing="12" visible="false" managed="false"
-                  style="-fx-background-color: #111827; -fx-padding: 20; -fx-background-radius: 12;"
-                  maxWidth="640">
-                <Label fx:id="roomNumberLabel" text="Room —" style="-fx-text-fill: white; -fx-font-size: 32px; -fx-font-weight: bold;"/>
-                <Label fx:id="roomTypeBadge" text="TYPE" style="-fx-text-fill: white; -fx-background-color: #2563eb; -fx-padding: 4 10; -fx-background-radius: 8;"/>
-                <Label fx:id="occupancyLabel" text="Occupancy" style="-fx-text-fill: #cbd5f5;"/>
-                <Label fx:id="priceLabel" text="₱—" style="-fx-text-fill: #fcd34d; -fx-font-size: 18px; -fx-font-weight: bold;"/>
-                <Separator/>
-                <Label text="Open maintenance for this room" style="-fx-text-fill: white; -fx-font-weight: bold;"/>
-                <ListView fx:id="maintList" prefHeight="200"/>
-            </VBox>
-        </VBox>
-    </center>
-</BorderPane>
+<VBox spacing="20" styleClass="content-view" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.teamroy.controller.TenantRoomsController">
+    <padding>
+        <Insets top="30" right="30" bottom="30" left="30"/>
+    </padding>
+
+    <Label text="Rooms" styleClass="payments-header"/>
+    <ComboBox fx:id="statusFilter" promptText="Filter by Status"/>
+    <ScrollPane fitToWidth="true" styleClass="main-scroll-pane" VBox.vgrow="ALWAYS">
+        
+        <FlowPane fx:id="roomGrid" hgap="25" vgap="25" styleClass="content-view">
+            </FlowPane>
+        
+    </ScrollPane>
+</VBox>

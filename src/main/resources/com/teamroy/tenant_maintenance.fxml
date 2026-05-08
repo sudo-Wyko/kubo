@@ -1,42 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
-<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-
-<VBox xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="com.teamroy.controller.TenantMaintenanceController"
-      spacing="18" style="-fx-background-color: #0a0a0a;">
+<?import javafx.geometry.Insets?>
+<VBox spacing="20" styleClass="content-view"
+      xmlns="http://javafx.com/javafx/17"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.teamroy.controller.TenantMaintenanceController">
     <padding>
-        <Insets top="10" right="10" bottom="10" left="10"/>
+        <Insets top="30" right="30" bottom="30" left="30"/>
     </padding>
 
-    <Label text="Submit a maintenance request" style="-fx-text-fill: white; -fx-font-size: 18px; -fx-font-weight: bold;"/>
+    <HBox alignment="CENTER_LEFT" spacing="20">
+        <Label text="Maintenance Requests" styleClass="payments-header"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <ComboBox fx:id="statusFilter" promptText="Filter by Status"/>
+        <Button text="+ New Request" onAction="#handleAddRequest" styleClass="payments-add-btn"/>
+    </HBox>
 
-    <VBox spacing="10" style="-fx-background-color: #111827; -fx-padding: 16; -fx-background-radius: 10;">
-        <Label text="Describe the issue" style="-fx-text-fill: #cbd5f5;"/>
-        <TextArea fx:id="issueDescriptionArea" prefRowCount="4" wrapText="true"
-                  promptText="What needs attention?"/>
-        <Label fx:id="submitErrorLabel" managed="false" visible="false"
-               style="-fx-text-fill: #f87171;" wrapText="true"/>
-
-        <HBox spacing="12" alignment="CENTER_LEFT">
-            <Label text="Room (optional)" style="-fx-text-fill: #cbd5f5;"/>
-            <ComboBox fx:id="roomCombo" prefWidth="240" promptText="Shared area"/>
-        </HBox>
-
-        <Button text="Submit Request" onAction="#handleSubmitRequest"
-                style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold;"/>
-    </VBox>
-
-    <Label text="My maintenance requests" style="-fx-text-fill: white; -fx-font-size: 18px; -fx-font-weight: bold;"/>
-
-    <TableView fx:id="requestsTable" prefHeight="360" VBox.vgrow="ALWAYS">
-        <columns>
-            <TableColumn fx:id="colDesc" text="Description" prefWidth="220"/>
-            <TableColumn fx:id="colRoom" text="Room" prefWidth="120"/>
-            <TableColumn fx:id="colWhen" text="Date" prefWidth="120"/>
-            <TableColumn fx:id="colStatus" text="Status" prefWidth="120"/>
-        </columns>
-    </TableView>
+    <ScrollPane fitToWidth="true" styleClass="main-scroll-pane" VBox.vgrow="ALWAYS">
+        <VBox fx:id="requestList" spacing="15" styleClass="content-view"/>
+    </ScrollPane>
 </VBox>
