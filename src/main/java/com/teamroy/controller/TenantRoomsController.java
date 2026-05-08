@@ -1,11 +1,23 @@
 package com.teamroy.controller;
 
+import com.teamroy.DatabaseUtility;
+import com.teamroy.model.dao.RoomDao;
+import com.teamroy.model.dao.RoomDaoImpl;
+import com.teamroy.model.dao.LeaseDao;
+import com.teamroy.model.dao.LeaseDaoImpl;
+import com.teamroy.model.entity.Room;
+import com.teamroy.model.entity.Lease;
+
 import javafx.fxml.FXML;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.layout.*;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+
+import java.sql.Connection;
+import java.util.ArrayList;
+import java.util.List;
 
 public class TenantRoomsController {
 
@@ -14,72 +26,92 @@ public class TenantRoomsController {
     @FXML
     private FlowPane roomGrid;
 
+    private Connection conn = DatabaseUtility.getConnection();
+    private RoomDaoImpl roomDao = new RoomDaoImpl(conn);
+    private LeaseDaoImpl leaseDao = new LeaseDaoImpl(conn);
+
     @FXML
     public void initialize() {
-        // Setup the filter dropdown
         statusFilter.getItems().addAll("All", "Available", "Full");
         statusFilter.setValue("All");
+        statusFilter.getStyleClass().add("payments-filter");
 
-        // Load the initial rooms
+        statusFilter.valueProperty().addListener((observable, oldValue, newValue) -> {
+            loadRooms();
+        });
+
         loadRooms();
     }
 
     private void loadRooms() {
         roomGrid.getChildren().clear();
 
-        // TODO: Replace with DAO!
-        // List<Room> rooms = roomDao.getAllRooms();
-        // for(Room room : rooms) { roomGrid.getChildren().add(createRoomCard(...)); }
+        String currentFilter = statusFilter.getValue();
+        List<Room> rooms = roomDao.GetAll();
 
-        // dummy data for testing
-        roomGrid.getChildren().add(createRoomCard("101", "Double bunk", "Available", "4,500", "You, Jane Doe"));
-        roomGrid.getChildren().add(createRoomCard("102", "Single bunk", "Full", "4,500", "Xanti, Ken"));
-        roomGrid.getChildren().add(createRoomCard("103", "Single bed", "Full", "4,500", "Mama"));
+        for (Room room : rooms) {
+            List<Lease> activeLeases = leaseDao.GetActiveLeasesByRoom(room.GetRoomID());
+            int actualOccupancy = activeLeases.size();
+            boolean isAvailable = actualOccupancy < room.GetCapacity();
+            String status = isAvailable ? "Available" : "Full";
+
+            if ("Available".equals(currentFilter) && !isAvailable)
+                continue;
+            if ("Full".equals(currentFilter) && isAvailable)
+                continue;
+
+            String roomNum = room.GetRoomNumber();
+            String type = room.GetRoomType();
+            String price = String.format("%,.2f", room.GetPrice());
+            String residents = "Occupied (" + actualOccupancy + "/" + room.GetCapacity() + ")";
+
+            VBox card = createRoomCard(roomNum, type, status, price, residents);
+            roomGrid.getChildren().add(card);
+        }
     }
 
     private VBox createRoomCard(String roomNum, String type, String status, String price, String residents) {
-
         VBox card = new VBox();
-        card.setStyle(
-                "-fx-background-color: #1a1a1a; -fx-border-radius: 15; -fx-background-radius: 15; -fx-border-color: white; -fx-border-width: 1.5;");
+        card.getStyleClass().add("room-card");
         card.setPrefWidth(260);
         card.setPrefHeight(320);
 
         StackPane imagePlaceholder = new StackPane();
         imagePlaceholder.setPrefHeight(150);
-        imagePlaceholder.setStyle(
-                "-fx-background-color: #333333; -fx-background-radius: 13 13 0 0; -fx-border-color: white; -fx-border-width: 0 0 1.5 0;");
+        imagePlaceholder.getStyleClass().add("room-card-image");
 
         VBox details = new VBox(8);
         details.setPadding(new Insets(15));
 
         Label nameLabel = new Label("Room " + roomNum);
-        nameLabel.setStyle("-fx-text-fill: white; -fx-font-size: 22px; -fx-font-weight: bold;");
+        nameLabel.getStyleClass().add("room-card-title");
 
         HBox typeStatusBox = new HBox(10);
         typeStatusBox.setAlignment(Pos.CENTER_LEFT);
 
         Label typeLabel = new Label(type);
-        typeLabel.setStyle("-fx-text-fill: #cbd5e1; -fx-font-size: 14px;");
+        typeLabel.getStyleClass().add("card-subtitle");
 
         Label statusBadge = new Label(status);
-        String badgeColor = status.equals("Available") ? "#a3e635" : "#f87171";
-        statusBadge.setStyle("-fx-background-color: transparent; -fx-text-fill: " + badgeColor + "; -fx-border-color: "
-                + badgeColor + "; -fx-border-radius: 4; -fx-padding: 2 8 2 8; -fx-font-size: 12px;");
+        statusBadge.getStyleClass().add("status-badge");
+        statusBadge.getStyleClass().add(
+                status.equals("Available") ? "room-status-available" : "room-status-full");
 
         typeStatusBox.getChildren().addAll(typeLabel, statusBadge);
 
-        Label priceLabel = new Label("$" + price + "/month");
-        priceLabel.setStyle("-fx-text-fill: white; -fx-font-size: 18px; -fx-font-weight: bold;");
-        VBox.setMargin(priceLabel, new Insets(10, 0, 5, 0)); // Add some vertical spacing
+        Label priceLabel = new Label("\u20b1" + price + "/month");
+        priceLabel.getStyleClass().add("room-card-price");
+        VBox.setMargin(priceLabel, new Insets(10, 0, 5, 0));
 
         HBox residentBox = new HBox(8);
         residentBox.setAlignment(Pos.CENTER_LEFT);
-        Label icon = new Label("\uD83D\uDC64"); // Unicode for a user icon
-        icon.setStyle("-fx-text-fill: #64748b; -fx-font-size: 14px;");
+
+        Label icon = new Label("\uD83D\uDC64");
+        icon.getStyleClass().add("card-subtitle");
 
         Label residentsLabel = new Label(residents);
-        residentsLabel.setStyle("-fx-text-fill: #94a3b8; -fx-font-size: 13px;");
+        residentsLabel.getStyleClass().add("card-subtitle");
+
         residentBox.getChildren().addAll(icon, residentsLabel);
 
         details.getChildren().addAll(nameLabel, typeStatusBox, priceLabel, residentBox);

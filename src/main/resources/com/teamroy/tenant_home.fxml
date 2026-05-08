@@ -1,7 +1,58 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<?import javafx.scene.layout.StackPane?>
-<?import javafx.scene.control.Label?>
 
-<StackPane style="-fx-background-color: #000000;" xmlns="http://javafx.com/javafx/17">
-    <Label text="Home Screen - Work in Progress" style="-fx-text-fill: white; -fx-font-size: 24px;"/>
-</StackPane>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.shape.Circle?>
+
+<ScrollPane fitToWidth="true" stylesheets="@style.css" styleClass="main-scroll-pane" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.teamroy.controller.TenantHomeController">
+    
+    <VBox spacing="25" styleClass="content-view">
+        <padding>
+            <Insets top="30" right="30" bottom="30" left="30"/>
+        </padding>
+
+        <HBox alignment="CENTER_LEFT" spacing="15">
+            <Circle radius="25" styleClass="profile-circle"/>
+            <Label fx:id="lblWelcome" text="" styleClass="header-label"/>
+        </HBox>
+
+        <GridPane hgap="20" vgap="20" VBox.vgrow="ALWAYS">
+            <columnConstraints>
+                <ColumnConstraints percentWidth="40" />
+                <ColumnConstraints percentWidth="30" />
+                <ColumnConstraints percentWidth="30" />
+            </columnConstraints>
+
+            <VBox GridPane.columnIndex="0" GridPane.rowIndex="0" spacing="15" styleClass="card">
+                <Label text="Rent Overview" styleClass="card-title"/>
+                <Label fx:id="lblRentAmount" text="" styleClass="balance-label"/>
+                <Label text="Amount due by next month" styleClass="card-subtitle"/>
+                <Button fx:id="btnPayNow" text="Pay now" maxWidth="Infinity" styleClass="primary-button"/>
+            </VBox>
+
+            <VBox GridPane.columnIndex="0" GridPane.rowIndex="1" spacing="15" styleClass="card" maxHeight="Infinity" GridPane.vgrow="ALWAYS">
+                <HBox alignment="CENTER_LEFT">
+                    <Label text="Maintenance Requests" styleClass="card-title"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <Label text="..." styleClass="card-title"/>
+                </HBox>
+                <VBox fx:id="maintenancePreviewList" spacing="12">
+                    </VBox>
+            </VBox>
+
+            <VBox GridPane.columnIndex="1" GridPane.rowIndex="0" GridPane.rowSpan="2" spacing="15" styleClass="card" maxHeight="Infinity">
+                <Label text="My Recent Activity" styleClass="card-title"/>
+                <VBox fx:id="activityList" spacing="15">
+                    </VBox>
+            </VBox>
+
+            <VBox GridPane.columnIndex="2" GridPane.rowIndex="0" GridPane.rowSpan="2" spacing="15" styleClass="card" maxHeight="Infinity">
+                <Label text="Announcements" styleClass="card-title"/>
+                <VBox fx:id="announcementsList" spacing="10">
+                    </VBox>
+            </VBox>
+
+        </GridPane>
+    </VBox>
+</ScrollPane>

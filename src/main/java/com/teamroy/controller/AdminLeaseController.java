@@ -44,6 +44,7 @@ public class AdminLeaseController {
     public void initialize() {
         // 1. Grab the global database connection and initialize DAOs!
         Connection conn = DatabaseUtility.getConnection();
+
         if (conn != null) {
             leaseDao = new LeaseDaoImpl(conn);
             tenantDao = new TenantDaoImpl(conn);

@@ -7,7 +7,7 @@ import java.util.List;
 public interface LeaseDao extends GenericDao<Lease> {
     List<Lease> GetByTenantID(int tenantId);
 
-    Lease GetActiveLeaseByRoom(int roomId);
+    List<Lease> GetActiveLeasesByRoom(int roomId);
 
     List<Lease> GetByStatus(String status);
 

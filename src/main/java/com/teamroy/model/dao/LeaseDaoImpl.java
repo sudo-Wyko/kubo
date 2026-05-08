@@ -108,18 +108,19 @@ public class LeaseDaoImpl implements LeaseDao {
     }
 
     @Override
-    public Lease GetActiveLeaseByRoom(int roomId) {
-        String sql = "SELECT * FROM LEASE WHERE room_id = ? AND status = 'ACTIVE' LIMIT 1";
+    public List<Lease> GetActiveLeasesByRoom(int roomId) {
+        List<Lease> leases = new ArrayList<>();
+        String sql = "SELECT * FROM LEASE WHERE room_id = ? AND status = 'ACTIVE'";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, roomId);
             try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next())
-                    return ResultSetToLease(rs);
+                while (rs.next())
+                    leases.add(ResultSetToLease(rs));
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return null;
+        return leases;
     }
 
     @Override

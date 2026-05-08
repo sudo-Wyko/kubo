@@ -81,6 +81,32 @@ CREATE TABLE DOCUMENT (
     FOREIGN KEY (tenant_id) REFERENCES TENANT(tenant_id)
 );
 
+CREATE TABLE ANNOUNCEMENT (
+    announcement_id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(100) NOT NULL,
+    message TEXT NOT NULL,
+    date_posted TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO ANNOUNCEMENT (title, message) 
+VALUES 
+('Water Interruption', 'Water will be unavailable tomorrow from 2:00 PM to 4:00 PM due to maintenance.'),
+('Pest Control Schedule', 'Monthly pest control will be conducted this Friday morning. Please secure your pets.');
+
+CREATE TABLE ACTIVITY_LOG (
+    activity_id INT AUTO_INCREMENT PRIMARY KEY,
+    tenant_id INT NOT NULL,
+    description VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (tenant_id) REFERENCES TENANT(tenant_id) ON DELETE CASCADE
+);
+
+INSERT INTO ACTIVITY_LOG (tenant_id, description) 
+VALUES 
+(4, 'Paid monthly rent: ₱5,000.00'),
+(4, 'Submitted a new maintenance request: "Leaky Faucet"'),
+(4, 'Signed the new lease agreement');
+
 -- Triggers
 -- auto update the balance after every payment
 DELIMITER //
@@ -115,6 +141,77 @@ DO
     UPDATE LEASE
     SET status = 'EXPIRED'
     WHERE end_date < CURRENT_DATE() and STATUS = 'ACTIVE';
+
+DELIMITER //
+
+CREATE TRIGGER after_payment_insert
+AFTER INSERT ON PAYMENT
+FOR EACH ROW
+BEGIN
+    -- This automatically logs: "Submitted a payment of ₱5000.00"
+    INSERT INTO ACTIVITY_LOG (tenant_id, description)
+    VALUES (NEW.tenant_id, CONCAT('Submitted a payment of ₱', FORMAT(NEW.amount_paid, 2)));
+END //
+
+DELIMITER ;
+
+DELIMITER //
+
+CREATE TRIGGER after_maintenance_insert
+AFTER INSERT ON MAINTENANCE_REQUEST
+FOR EACH ROW
+BEGIN
+    -- This automatically logs: "Submitted maintenance request: Leaky faucet in kitchen"
+    INSERT INTO ACTIVITY_LOG (tenant_id, description)
+    VALUES (NEW.tenant_id, CONCAT('Submitted maintenance request: ', NEW.report_description));
+END //
+
+DELIMITER ;
+
+DELIMITER //
+
+CREATE TRIGGER after_payment_update
+AFTER UPDATE ON PAYMENT
+FOR EACH ROW
+BEGIN
+    -- Only log it if the status actually changed!
+    IF OLD.status != NEW.status THEN
+        INSERT INTO ACTIVITY_LOG (tenant_id, description)
+        VALUES (NEW.tenant_id, CONCAT('Payment #', NEW.payment_id, ' was marked as ', NEW.status));
+    END IF;
+END //
+
+DELIMITER ;
+
+DELIMITER //
+
+CREATE TRIGGER after_maintenance_update
+AFTER UPDATE ON MAINTENANCE_REQUEST
+FOR EACH ROW
+BEGIN
+    -- Only log it if the status actually changed!
+    IF OLD.status != NEW.status THEN
+        INSERT INTO ACTIVITY_LOG (tenant_id, description)
+        VALUES (NEW.tenant_id, CONCAT('Maintenance request #', NEW.request_id, ' was updated to ', NEW.status));
+    END IF;
+END //
+
+DELIMITER ;
+
+DELIMITER //
+
+CREATE TRIGGER after_tenant_lease_update
+AFTER UPDATE ON TENANT
+FOR EACH ROW
+BEGIN
+    -- Assuming you have a column named lease_status
+    IF OLD.status != NEW.status THEN
+        INSERT INTO ACTIVITY_LOG (tenant_id, description)
+        VALUES (NEW.tenant_id, CONCAT('Lease status updated to: ', NEW.status));
+    END IF;
+END //
+
+DELIMITER ;
 
 -- insert test users
 INSERT INTO USER_ACCOUNT (username, password_hash, role)
