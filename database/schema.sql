@@ -101,14 +101,6 @@ CREATE TABLE ACTIVITY_LOG (
     FOREIGN KEY (tenant_id) REFERENCES TENANT(tenant_id) ON DELETE CASCADE
 );
 
-INSERT INTO ACTIVITY_LOG (tenant_id, description)
-VALUES
-(4, 'Paid monthly rent: ₱5,000.00'),
-(4, 'Submitted a new maintenance request: "Leaky Faucet"'),
-(4, 'Signed the new lease agreement');
-
--- Triggers
--- auto update the balance after every payment
 DELIMITER //
 CREATE TRIGGER update_tenant_balance_after_payment
 AFTER INSERT ON PAYMENT
@@ -133,7 +125,6 @@ BEGIN
     END IF;
 END //
 
--- dynamically check for expired leases
 SET GLOBAL event_scheduler = ON;
 
 CREATE EVENT update_leases_daily
@@ -215,15 +206,12 @@ END //
 
 DELIMITER ;
 
--- insert test users
 INSERT INTO USER_ACCOUNT (username, password_hash, role)
-VALUES ('admin', '123', 'ADMIN');
+VALUES ('admin', '240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f1979c67f', 'ADMIN');
 INSERT INTO USER_ACCOUNT (username, password_hash, role)
-VALUES ('tenant', '123', 'TENANT');
+VALUES ('tenant', '240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f1979c67f', 'TENANT');
 
--- forgot to add prices to the room
 ALTER TABLE ROOM ADD COLUMN price DECIMAL(10,2) NOT NULL DEFAULT 0.00;
 ALTER TABLE LEASE ADD COLUMN monthly_rent DECIMAL(10,2) NOT NULL;
 
--- add floor to room
 ALTER TABLE ROOM ADD COLUMN floor TINYINT NOT NULL DEFAULT 1 AFTER room_number;

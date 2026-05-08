@@ -1,5 +1,4 @@
-package com.teamroy.controller;
-
+﻿package com.teamroy.controller;
 import com.teamroy.CurrencyUtil;
 import com.teamroy.ConnectionManager;
 import com.teamroy.model.dao.PaymentDaoImpl;
@@ -26,7 +25,6 @@ import javafx.scene.control.TableView;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-
 import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;
@@ -38,11 +36,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
 public class AdminPaymentController {
-
     private static final DateTimeFormatter DATE_TIME_FORMAT = DateTimeFormatter.ofPattern("MMM d, yyyy h:mm a");
-
     @FXML
     private ComboBox<Tenant> tenantFilterCombo;
     @FXML
@@ -73,14 +68,12 @@ public class AdminPaymentController {
     private Label verifiedCardLabel;
     @FXML
     private Label failedCardLabel;
-
     private Connection conn;
     private PaymentDaoImpl paymentDao;
     private TenantDaoImpl tenantDao;
     private PaymentService paymentService;
     private final ImportExportService importExportService = new ImportExportService();
     private final Map<Integer, String> tenantNameCache = new HashMap<>();
-
     private Tenant createAllTenantsOption() {
         Tenant sentinel = new Tenant();
         sentinel.SetTenantID(-1);
@@ -88,7 +81,6 @@ public class AdminPaymentController {
         sentinel.SetLastName("Tenants");
         return sentinel;
     }
-
     @FXML
     private void initialize() {
         try {
@@ -101,24 +93,19 @@ public class AdminPaymentController {
             ex.printStackTrace();
             return;
         }
-
         tenantFilterCombo.getItems().add(createAllTenantsOption());
         tenantFilterCombo.getItems().addAll(tenantDao.GetAllActive());
         tenantFilterCombo.getSelectionModel().selectFirst();
         bindTenantFilterCells();
-
         statusFilterCombo.setItems(FXCollections.observableArrayList("ALL", "PENDING", "VERIFIED", "FAILED"));
         statusFilterCombo.getSelectionModel().selectFirst();
-
         tenantFilterCombo.getSelectionModel().selectedItemProperty().addListener((obs, o, n) -> refreshTable());
         statusFilterCombo.getSelectionModel().selectedItemProperty().addListener((obs, o, n) -> refreshTable());
         monthFilterPicker.valueProperty().addListener((obs, o, n) -> refreshTable());
-
         configureColumns();
         refreshTenantNames();
         refreshTable();
     }
-
     private void bindTenantFilterCells() {
         tenantFilterCombo.setCellFactory(lv -> new ListCell<Tenant>() {
             @Override
@@ -147,24 +134,18 @@ public class AdminPaymentController {
             }
         });
     }
-
     private void configureColumns() {
         colPaymentId.setCellValueFactory(cd -> new ReadOnlyObjectWrapper<>(cd.getValue().GetPaymentID()));
-
         colTenant.setCellValueFactory(cd -> new ReadOnlyObjectWrapper<>(
                 tenantNameCache.getOrDefault(cd.getValue().GetTenantID(), "Tenant #" + cd.getValue().GetTenantID())));
-
         colAmount.setCellValueFactory(cd ->
                 new ReadOnlyObjectWrapper<>(CurrencyUtil.format(cd.getValue().GetAmountPaid())));
-
         colDate.setCellValueFactory(cd -> {
             LocalDateTime dt = cd.getValue().GetPaymentDate();
             String formatted = dt == null ? "" : DATE_TIME_FORMAT.format(dt);
             return new ReadOnlyObjectWrapper<>(formatted);
         });
-
         colMethod.setCellValueFactory(cd -> new ReadOnlyObjectWrapper<>(cd.getValue().GetPaymentMethod()));
-
         colStatus.setCellValueFactory(cd -> new ReadOnlyObjectWrapper<>(createStatusBadge(cd.getValue().GetStatus())));
         colStatus.setCellFactory(column -> new TableCell<Payment, Label>() {
             @Override
@@ -177,12 +158,10 @@ public class AdminPaymentController {
                 }
             }
         });
-
         colActions.setCellFactory(col -> new TableCell<Payment, Void>() {
             private final ComboBox<String> combo = new ComboBox<>(
                     FXCollections.observableArrayList("PENDING", "VERIFIED", "FAILED"));
             private boolean suppress;
-
             {
                 combo.valueProperty().addListener((obs, oldVal, newVal) -> {
                     if (suppress || oldVal == null || getTableRow() == null || getTableRow().getItem() == null
@@ -196,7 +175,6 @@ public class AdminPaymentController {
                     handleUpdateStatus(rowPayment, newVal);
                 });
             }
-
             @Override
             protected void updateItem(Void item, boolean empty) {
                 super.updateItem(item, empty);
@@ -212,14 +190,12 @@ public class AdminPaymentController {
             }
         });
     }
-
     private Label createStatusBadge(String status) {
         Label label = new Label(status == null ? "" : status);
         label.setStyle(statusBadgeStyle(status));
         label.setMaxWidth(Double.MAX_VALUE);
         return label;
     }
-
     private String statusBadgeStyle(String status) {
         String bg = "#334155";
         if ("PENDING".equalsIgnoreCase(status)) {
@@ -231,7 +207,6 @@ public class AdminPaymentController {
         }
         return "-fx-background-color: " + bg + "; -fx-text-fill: white; -fx-padding: 4 10 4 10; -fx-background-radius: 12;";
     }
-
     private void refreshTenantNames() {
         tenantNameCache.clear();
         for (Tenant tenant : tenantDao.GetAllActive()) {
@@ -243,27 +218,21 @@ public class AdminPaymentController {
                     tenant.GetFirstName() + " " + tenant.GetLastName());
         }
     }
-
-    /** Current filter view of payments (matches the table). */
     private List<Payment> getFilteredPayments() {
         return applyFilters(new ArrayList<>(paymentDao.GetAll()));
     }
-
     private List<Payment> applyFilters(List<Payment> source) {
         List<Payment> list = new ArrayList<>(source);
-
         Tenant tenantSelection = tenantFilterCombo.getSelectionModel().getSelectedItem();
         if (tenantSelection != null && tenantSelection.GetTenantID() >= 0) {
             final int tenantId = tenantSelection.GetTenantID();
             list = list.stream().filter(p -> p.GetTenantID() == tenantId).collect(Collectors.toList());
         }
-
         String statusSelection = statusFilterCombo.getSelectionModel().getSelectedItem();
         if (statusSelection != null && !"ALL".equals(statusSelection)) {
             list = list.stream().filter(p -> statusSelection.equalsIgnoreCase(p.GetStatus()))
                     .collect(Collectors.toList());
         }
-
         LocalDate monthSelection = monthFilterPicker.getValue();
         if (monthSelection != null) {
             LocalDate start = monthSelection.withDayOfMonth(1);
@@ -275,22 +244,16 @@ public class AdminPaymentController {
                 return dt != null && !dt.isBefore(startDt) && !dt.isAfter(endDt);
             }).collect(Collectors.toList());
         }
-
         return list;
     }
-
     private void refreshTable() {
         if (paymentDao == null) {
             return;
         }
-
         refreshTenantNames();
-
         List<Payment> payments = getFilteredPayments();
-
         ObservableList<Payment> rows = FXCollections.observableArrayList(payments);
         paymentTable.setItems(rows);
-
         double pendingSum = payments.stream()
                 .filter(p -> "PENDING".equalsIgnoreCase(p.GetStatus()))
                 .mapToDouble(Payment::GetAmountPaid)
@@ -303,30 +266,24 @@ public class AdminPaymentController {
                 .filter(p -> "FAILED".equalsIgnoreCase(p.GetStatus()))
                 .mapToDouble(Payment::GetAmountPaid)
                 .sum();
-
         pendingCardLabel.setText(CurrencyUtil.format(pendingSum));
         verifiedCardLabel.setText(CurrencyUtil.format(verifiedSum));
         failedCardLabel.setText(CurrencyUtil.format(failedSum));
         verifiedTotalLabel.setText(CurrencyUtil.format(verifiedSum));
-
         paymentTable.refresh();
     }
-
     void handleUpdateStatus(Payment payment, String newStatus) {
         if (payment == null || newStatus == null || newStatus.equals(payment.GetStatus())) {
             return;
         }
-
         if ("VERIFIED".equalsIgnoreCase(newStatus) && !"VERIFIED".equalsIgnoreCase(payment.GetStatus())) {
             paymentService.verifyPayment(payment.GetPaymentID(), payment.GetTenantID(),
                     payment.GetAmountPaid());
         } else {
             paymentDao.UpdateStatus(payment.GetPaymentID(), newStatus);
         }
-
         refreshTable();
     }
-
     @FXML
     private void handleExportPaymentsCsv() {
         if (paymentDao == null || paymentTable == null || paymentTable.getScene() == null) {
@@ -351,7 +308,6 @@ public class AdminPaymentController {
             a.showAndWait();
         }
     }
-
     @FXML
     private void handleExportPaymentsJson() {
         if (paymentDao == null || paymentTable == null || paymentTable.getScene() == null) {
@@ -376,7 +332,6 @@ public class AdminPaymentController {
             a.showAndWait();
         }
     }
-
     @FXML
     private void handleAddPayment() {
         try {
@@ -385,7 +340,6 @@ public class AdminPaymentController {
             AddPaymentDialogController controller = loader.getController();
             controller.configureAdmin(conn, this::refreshTable);
             controller.setTenants(tenantDao.GetAllActive());
-
             Stage stage = new Stage();
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.setTitle("Add payment");

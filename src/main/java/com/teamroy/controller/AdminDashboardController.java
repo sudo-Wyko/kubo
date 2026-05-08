@@ -1,5 +1,4 @@
-package com.teamroy.controller;
-
+﻿package com.teamroy.controller;
 import com.teamroy.CurrencyUtil;
 import com.teamroy.ConnectionManager;
 import com.teamroy.model.dao.LeaseDaoImpl;
@@ -24,7 +23,6 @@ import javafx.scene.control.ListView;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -37,11 +35,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
-
 public class AdminDashboardController {
-
     private static final DateTimeFormatter PAYFMT = DateTimeFormatter.ofPattern("MMM d yyyy h:mm a");
-
     @FXML
     private Label lblTotalRooms;
     @FXML
@@ -62,20 +57,16 @@ public class AdminDashboardController {
     private VBox announcementsBox;
     @FXML
     private VBox maintenanceCard;
-
     private Connection conn;
     private RoomDaoImpl roomDao;
     private LeaseDaoImpl leaseDao;
     private TenantDaoImpl tenantDao;
     private MaintenanceRequestDaoImpl maintenanceDao;
     private PaymentDaoImpl paymentDao;
-
     private AdminController adminController;
-
     public void setAdminController(AdminController adminController) {
         this.adminController = adminController;
     }
-
     @FXML
     private void initialize() {
         try {
@@ -90,33 +81,27 @@ public class AdminDashboardController {
             ex.printStackTrace();
             return;
         }
-
         revenueChart.legendVisibleProperty().set(false);
         refreshAll();
     }
-
     @FXML
     private void handleAddTenant() {
         openTenantDialog(null);
     }
-
     @FXML
     private void handleCreateLease() {
         openLeaseDialog();
     }
-
     @FXML
     private void handleAddRoom() {
         openRoomDialog();
     }
-
     @FXML
     private void handleMaintenanceCardClick() {
         if (adminController != null) {
             adminController.loadMaintenanceView();
         }
     }
-
     private void openTenantDialog(Tenant tenant) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/teamroy/add_tenant_dialog.fxml"));
@@ -127,7 +112,6 @@ public class AdminDashboardController {
             } else {
                 c.configureEdit(conn, tenant, this::refreshAll);
             }
-
             Stage stage = new Stage();
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.setTitle(tenant == null ? "Add tenant" : "Edit tenant");
@@ -137,14 +121,12 @@ public class AdminDashboardController {
             ex.printStackTrace();
         }
     }
-
     private void openLeaseDialog() {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/teamroy/add_lease_dialog.fxml"));
             Parent root = loader.load();
             AddLeaseDialogController c = loader.getController();
             c.configureCreate(conn, this::refreshAll);
-
             Stage stage = new Stage();
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.setTitle("Create lease");
@@ -154,14 +136,12 @@ public class AdminDashboardController {
             ex.printStackTrace();
         }
     }
-
     private void openRoomDialog() {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/teamroy/add_room_dialog.fxml"));
             Parent root = loader.load();
             AddRoomDialogController c = loader.getController();
             c.configureCreate(conn, this::refreshAll);
-
             Stage stage = new Stage();
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.setTitle("Add room");
@@ -171,12 +151,10 @@ public class AdminDashboardController {
             ex.printStackTrace();
         }
     }
-
     public void refreshAll() {
         if (paymentDao == null) {
             return;
         }
-
         refreshOccupancy();
         refreshRevenueChart();
         refreshMaintenanceCounts();
@@ -184,23 +162,19 @@ public class AdminDashboardController {
         refreshRecentPayments();
         loadAnnouncements();
     }
-
     private void refreshOccupancy() {
         List<Room> rooms = roomDao.GetAll();
         int totalRooms = rooms.size();
         long occupiedRooms = rooms.stream().filter(r -> r.GetCurrentOccupancy() > 0).count();
         int availableBeds = rooms.stream().mapToInt(r -> Math.max(r.GetCapacity() - r.GetCurrentOccupancy(), 0)).sum();
-
         lblTotalRooms.setText("Total rooms: " + totalRooms);
         lblOccupiedRooms.setText("Occupied rooms: " + occupiedRooms);
         lblAvailableBeds.setText("Available beds: " + availableBeds);
     }
-
     private void refreshRevenueChart() {
         revenueChart.getData().clear();
         XYChart.Series<String, Number> series = new XYChart.Series<>();
         series.setName("Verified Payments");
-
         LocalDateTime now = LocalDateTime.now();
         for (int i = 5; i >= 0; i--) {
             LocalDateTime start = now.minusMonths(i).withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0).withNano(0);
@@ -214,17 +188,14 @@ public class AdminDashboardController {
                     + " " + start.getYear();
             series.getData().add(new XYChart.Data<>(label, total));
         }
-
         revenueChart.getData().add(series);
     }
-
     private void refreshMaintenanceCounts() {
         List<MaintenanceRequest> allNew = maintenanceDao.GetByStatus("NEW");
         List<MaintenanceRequest> wip = maintenanceDao.GetByStatus("IN-PROGRESS");
         lblMaintNew.setText("NEW: " + allNew.size());
         lblMaintProgress.setText("IN-PROGRESS: " + wip.size());
     }
-
     private void refreshExpiring() {
         List<Lease> leases = leaseDao.GetExpiringSoon(LocalDate.now().plusDays(30));
         List<String> lines = leases.stream().map(lease -> {
@@ -233,31 +204,26 @@ public class AdminDashboardController {
             String tenantName = tenant == null ? ("Tenant#" + lease.GetTenantID())
                     : (tenant.GetFirstName() + " " + tenant.GetLastName());
             String roomLabel = room == null ? ("Room#" + lease.GetRoomID()) : room.GetRoomNumber();
-            return tenantName + " • Room " + roomLabel + " • ends "
-                    + lease.GetEndDate() + " • " + CurrencyUtil.format(lease.GetMonthlyRent());
+            return tenantName + " â€¢ Room " + roomLabel + " â€¢ ends "
+                    + lease.GetEndDate() + " â€¢ " + CurrencyUtil.format(lease.GetMonthlyRent());
         }).collect(Collectors.toList());
-
         expiringLeaseList.setItems(FXCollections.observableArrayList(lines));
     }
-
     private void refreshRecentPayments() {
         List<Payment> payments = paymentDao.GetAll().stream()
                 .sorted(Comparator.comparing(Payment::GetPaymentDate, Comparator.nullsLast(Comparator.naturalOrder()))
                         .reversed())
                 .limit(10)
                 .collect(Collectors.toList());
-
         List<String> lines = payments.stream().map(payment -> {
             Tenant t = tenantDao.GetByID(payment.GetTenantID());
             String name = t == null ? ("#" + payment.GetTenantID()) : (t.GetFirstName() + " " + t.GetLastName());
-            String when = payment.GetPaymentDate() == null ? "—" : PAYFMT.format(payment.GetPaymentDate());
+            String when = payment.GetPaymentDate() == null ? "â€”" : PAYFMT.format(payment.GetPaymentDate());
             String amount = CurrencyUtil.format(payment.GetAmountPaid());
-            return when + " • " + name + " • " + amount + " • " + payment.GetStatus();
+            return when + " â€¢ " + name + " â€¢ " + amount + " â€¢ " + payment.GetStatus();
         }).collect(Collectors.toList());
-
         recentActivityList.setItems(FXCollections.observableArrayList(lines));
     }
-
     private void loadAnnouncements() {
         announcementsBox.getChildren().clear();
         InputStream stream = getClass().getResourceAsStream("/com/teamroy/announcements.txt");
@@ -275,7 +241,7 @@ public class AdminDashboardController {
                 if (trimmed.isEmpty()) {
                     continue;
                 }
-                Label lbl = new Label("• " + trimmed);
+                Label lbl = new Label("â€¢ " + trimmed);
                 lbl.setWrapText(true);
                 lbl.getStyleClass().add("row-description");
                 announcementsBox.getChildren().add(lbl);

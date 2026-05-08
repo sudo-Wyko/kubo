@@ -1,5 +1,4 @@
-package com.teamroy;
-
+﻿package com.teamroy;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.sql.Connection;
@@ -8,14 +7,10 @@ import java.sql.SQLException;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
 public final class ConnectionManager {
-
     private static final Logger LOGGER = Logger.getLogger(ConnectionManager.class.getName());
     private static Connection connection;
-
     private ConnectionManager() {}
-
     public static Connection getConnection() {
         try {
             if (connection == null || connection.isClosed()) {
@@ -25,27 +20,21 @@ public final class ConnectionManager {
                 } catch (IOException e) {
                     throw new RuntimeException("config.properties not found.", e);
                 }
-
                 String host = props.getProperty("db.host");
                 String dbName = props.getProperty("db.name");
                 String user = props.getProperty("db.user");
                 String pass = props.getProperty("db.password");
                 String fullUrl = host + "/" + dbName;
-
                 try {
-                    // Attempt to connect normally
                     connection = DriverManager.getConnection(fullUrl, user, pass);
                     LOGGER.info(() -> "Connected to database: " + dbName);
                 } catch (SQLException e) {
-                    // Error Code 1049 means the database doesn't exist yet
                     if (e.getErrorCode() == 1049) {
                         LOGGER.info(() -> "Database not found, initializing: " + dbName);
                         DatabaseInitializer.setupDatabase(host, dbName, user, pass);
-                        // Try connecting one more time now that it's built
                         connection = DriverManager.getConnection(fullUrl, user, pass);
                         LOGGER.info(() -> "Connected to newly created database: " + dbName);
                     } else {
-                        // If it's a wrong password or server offline error, throw it
                         throw e;
                     }
                 }
@@ -55,7 +44,6 @@ public final class ConnectionManager {
             throw new RuntimeException("Failed to connect to database.", e);
         }
     }
-
     public static void close() {
         try {
             if (connection != null && !connection.isClosed()) {

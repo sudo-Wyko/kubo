@@ -1,17 +1,13 @@
-package com.teamroy.model.dao;
-
+﻿package com.teamroy.model.dao;
 import com.teamroy.model.entity.Document;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.sql.*;
-
 public class DocumentDaoImpl implements DocumentDao {
     private Connection conn;
-
     public DocumentDaoImpl(Connection conn) {
         this.conn = conn;
     }
-
     @Override
     public void Create(Document document) {
         String sql = "INSERT INTO DOCUMENT (tenant_id, title, file_path, uploaded_at) VALUES (?, ?, ?, ?)";
@@ -21,7 +17,6 @@ public class DocumentDaoImpl implements DocumentDao {
             ps.setString(3, document.GetFilePath());
             ps.setObject(4, document.GetTimeUploadedAt());
             ps.executeUpdate();
-
             try (ResultSet rs = ps.getGeneratedKeys()) {
                 if (rs.next())
                     document.SetDocumentID(rs.getInt(1));
@@ -30,7 +25,6 @@ public class DocumentDaoImpl implements DocumentDao {
             e.printStackTrace();
         }
     }
-
     @Override
     public Document GetByID(int documentId) {
         String sql = "SELECT * FROM DOCUMENT WHERE document_id = ?";
@@ -45,7 +39,6 @@ public class DocumentDaoImpl implements DocumentDao {
         }
         return null;
     }
-
     @Override
     public List<Document> GetAll() {
         List<Document> docs = new ArrayList<>();
@@ -59,7 +52,6 @@ public class DocumentDaoImpl implements DocumentDao {
         }
         return docs;
     }
-
     @Override
     public void Update(Document document) {
         String sql = "UPDATE DOCUMENT SET tenant_id=?, title=?, file_path=?, uploaded_at=? WHERE document_id=?";
@@ -74,7 +66,6 @@ public class DocumentDaoImpl implements DocumentDao {
             e.printStackTrace();
         }
     }
-
     @Override
     public void Delete(int id) {
         String sql = "DELETE FROM DOCUMENT WHERE document_id = ?";
@@ -85,7 +76,6 @@ public class DocumentDaoImpl implements DocumentDao {
             e.printStackTrace();
         }
     }
-
     @Override
     public List<Document> GetByTenantID(int tenantId) {
         List<Document> docs = new ArrayList<>();
@@ -101,7 +91,6 @@ public class DocumentDaoImpl implements DocumentDao {
         }
         return docs;
     }
-
     @Override
     public List<Document> GetByTitle(String title) {
         List<Document> docs = new ArrayList<>();
@@ -117,7 +106,6 @@ public class DocumentDaoImpl implements DocumentDao {
         }
         return docs;
     }
-
     @Override
     public Document GetByFilePath(String filePath) {
         String sql = "SELECT * FROM DOCUMENT WHERE file_path = ?";
@@ -132,7 +120,6 @@ public class DocumentDaoImpl implements DocumentDao {
         }
         return null;
     }
-
     @Override
     public void DeleteByTenantID(int tenantId) {
         String sql = "DELETE FROM DOCUMENT WHERE tenant_id = ?";
@@ -143,7 +130,6 @@ public class DocumentDaoImpl implements DocumentDao {
             e.printStackTrace();
         }
     }
-
     private Document ResultSetToDocument(ResultSet rs) throws SQLException {
         Document doc = new Document();
         doc.SetDocumentID(rs.getInt("document_id"));

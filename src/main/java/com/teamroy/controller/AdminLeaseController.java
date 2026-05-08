@@ -1,5 +1,4 @@
-package com.teamroy.controller;
-
+﻿package com.teamroy.controller;
 import com.teamroy.CurrencyUtil;
 import com.teamroy.ConnectionManager;
 import com.teamroy.model.dao.LeaseDaoImpl;
@@ -30,7 +29,6 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Duration;
-
 import java.sql.Connection;
 import java.time.LocalDate;
 import java.util.HashSet;
@@ -38,9 +36,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-
 public class AdminLeaseController {
-
     @FXML
     private TextField searchField;
     @FXML
@@ -49,17 +45,13 @@ public class AdminLeaseController {
     private ScrollPane leasesScrollPane;
     @FXML
     private FlowPane leasesFlowPane;
-
     private Connection conn;
     private LeaseDaoImpl leaseDao;
     private TenantDaoImpl tenantDao;
     private RoomDaoImpl roomDao;
-
     private List<Lease> cachedLeases = List.of();
     private Map<Integer, String> tenantNameById = Map.of();
-
     private final PauseTransition searchDebounce = new PauseTransition(Duration.millis(300));
-
     @FXML
     private void initialize() {
         try {
@@ -72,20 +64,15 @@ public class AdminLeaseController {
             ex.printStackTrace();
             return;
         }
-
         leasesScrollPane.setFitToWidth(true);
-
         statusFilterCombo.setItems(FXCollections.observableArrayList(
                 "All", "ACTIVE", "EXPIRED", "TERMINATED"));
         statusFilterCombo.getSelectionModel().selectFirst();
         statusFilterCombo.getSelectionModel().selectedItemProperty().addListener((o, ov, nv) -> rebuildFiltered());
-
         searchDebounce.setOnFinished(e -> rebuildFiltered());
         searchField.textProperty().addListener((o, ov, nv) -> searchDebounce.playFromStart());
-
         reloadFromDatabase();
     }
-
     @FXML
     private void handleAddLease() {
         try {
@@ -93,7 +80,6 @@ public class AdminLeaseController {
             Parent root = loader.load();
             AddLeaseDialogController c = loader.getController();
             c.configureCreate(conn, this::reloadFromDatabase);
-
             Stage stage = new Stage();
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.setTitle("Create lease");
@@ -103,18 +89,15 @@ public class AdminLeaseController {
             ex.printStackTrace();
         }
     }
-
     private void reloadFromDatabase() {
         cachedLeases = leaseDao.GetAll();
         tenantNameById = tenantDao.GetAll().stream()
                 .collect(Collectors.toMap(Tenant::GetTenantID, t -> combineName(t), (a, b) -> a));
-
         Map<Integer, String> roomNumberByRoomId =
                 roomDao.GetAll().stream().collect(Collectors.toMap(
                         r -> r.GetRoomID(), r -> r.GetRoomNumber(), (a, b) -> a));
         rebuildFiltered(roomNumberByRoomId);
     }
-
     private Set<Integer> expiringLeaseIds() {
         Set<Integer> set = new HashSet<>();
         for (Lease l : leaseDao.GetExpiringSoon(LocalDate.now().plusDays(30))) {
@@ -122,37 +105,29 @@ public class AdminLeaseController {
         }
         return set;
     }
-
     private void rebuildFiltered() {
         Map<Integer, String> roomNumberByRoomId = roomDao.GetAll().stream().collect(Collectors.toMap(
                 r -> r.GetRoomID(), r -> r.GetRoomNumber(), (a, b) -> a));
         rebuildFiltered(roomNumberByRoomId);
     }
-
     private void rebuildFiltered(Map<Integer, String> roomNumberByRoomId) {
         leasesFlowPane.getChildren().clear();
-
         String qRaw = searchField.getText().trim().toLowerCase();
         String statusPick = statusFilterCombo.getSelectionModel().getSelectedItem();
-
         Set<Integer> expiring = expiringLeaseIds();
-
         List<Lease> rows =
                 cachedLeases.stream().filter(lease -> filterLease(lease, statusPick, qRaw, roomNumberByRoomId))
                         .sorted((a, b) -> Integer.compare(a.GetLeaseID(), b.GetLeaseID()))
                         .collect(Collectors.toList());
-
         for (Lease lease : rows) {
             String tenantLabel = tenantLabel(lease.GetTenantID());
             String roomLabel = roomNumberByRoomId.getOrDefault(lease.GetRoomID(),
                     Integer.toString(lease.GetRoomID()));
             boolean amber = expiring.contains(lease.GetLeaseID())
                     && "ACTIVE".equalsIgnoreCase(lease.GetStatus());
-
             leasesFlowPane.getChildren().add(buildLeaseCard(lease, tenantLabel, roomLabel, amber));
         }
     }
-
     private boolean filterLease(
             Lease lease, String statusPick, String qRaw, Map<Integer, String> roomNumberByRoomId) {
         if (!"All".equalsIgnoreCase(statusPick)
@@ -166,20 +141,16 @@ public class AdminLeaseController {
         String rnum = roomNumberByRoomId.getOrDefault(lease.GetRoomID(), "").toLowerCase();
         return tname.contains(qRaw) || rnum.contains(qRaw);
     }
-
     private String tenantLabel(int tenantId) {
         return tenantNameById.getOrDefault(tenantId, combineNameSafe(tenantId));
     }
-
     private String combineNameSafe(int tenantId) {
         Tenant t = tenantDao.GetByID(tenantId);
         return t == null ? ("Tenant#" + tenantId) : combineName(t);
     }
-
     private static String combineName(Tenant t) {
         return t.GetFirstName() + " " + t.GetLastName();
     }
-
     private VBox buildLeaseCard(Lease lease, String tenantName, String roomNum, boolean expiringSoon) {
         VBox card = new VBox(8);
         card.setPadding(new Insets(12));
@@ -190,45 +161,33 @@ public class AdminLeaseController {
         if (expiringSoon) {
             card.getStyleClass().add("lease-card-expiring");
         }
-
         Label nameLabel = new Label(tenantName);
         nameLabel.getStyleClass().add("card-title");
         nameLabel.setWrapText(true);
-
         Label badge = leaseStatusBadge(lease);
-
         Label roomLabelUi = new Label("Room " + roomNum);
         roomLabelUi.getStyleClass().add("card-subtitle");
-
-        Label range = new Label(lease.GetStartDate() + " → " + lease.GetEndDate());
+        Label range = new Label(lease.GetStartDate() + " â†’ " + lease.GetEndDate());
         range.getStyleClass().add("card-subtitle");
-
         Label rentLbl = new Label(CurrencyUtil.format(lease.GetMonthlyRent()) + " / mo");
         rentLbl.getStyleClass().add("lease-rent");
-
         Region spacer = new Region();
         VBox.setVgrow(spacer, Priority.ALWAYS);
-
         Button editBtn = new Button("Edit");
         editBtn.getStyleClass().add("secondary-button");
         editBtn.setOnAction(ev -> handleEdit(lease));
-
         Button termBtn = new Button("Terminate");
         termBtn.getStyleClass().add("danger-button");
         termBtn.setOnAction(ev -> handleTerminate(lease));
         termBtn.setDisable(!"ACTIVE".equalsIgnoreCase(lease.GetStatus()));
-
         HBox actions = new HBox(8, editBtn, termBtn);
         actions.setAlignment(Pos.CENTER_LEFT);
-
         card.getChildren().addAll(nameLabel, badge, roomLabelUi, range, rentLbl, spacer, actions);
         return card;
     }
-
     private Label leaseStatusBadge(Lease lease) {
         String display = displayLeaseStatusText(lease);
         Label label = new Label(display);
-
         label.getStyleClass().addAll("status-badge", "lease-status-badge");
         if ("ACTIVE".equals(display)) {
             label.getStyleClass().add("badge-active");
@@ -241,7 +200,6 @@ public class AdminLeaseController {
         }
         return label;
     }
-
     private static String displayLeaseStatusText(Lease lease) {
         String status = lease.GetStatus();
         if ("ACTIVE".equalsIgnoreCase(status) && lease.GetStartDate() != null
@@ -250,14 +208,12 @@ public class AdminLeaseController {
         }
         return status != null ? status : "";
     }
-
     private void handleEdit(Lease lease) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/teamroy/add_lease_dialog.fxml"));
             Parent root = loader.load();
             AddLeaseDialogController c = loader.getController();
             c.configureEdit(conn, lease, this::reloadFromDatabase);
-
             Stage stage = new Stage();
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.setTitle("Edit lease");
@@ -267,7 +223,6 @@ public class AdminLeaseController {
             ex.printStackTrace();
         }
     }
-
     private void handleTerminate(Lease lease) {
         if (!"ACTIVE".equalsIgnoreCase(lease.GetStatus())) {
             return;

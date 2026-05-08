@@ -1,10 +1,7 @@
-package com.teamroy.service;
-
+﻿package com.teamroy.service;
 import com.teamroy.model.dao.TenantDao;
 import com.teamroy.model.entity.Payment;
 import com.teamroy.model.entity.Tenant;
-
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -13,9 +10,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-
 public final class ImportExportService {
-
     public void exportTenantsToCSV(List<Tenant> tenants, String filePath) throws IOException {
         try (BufferedWriter bw = new BufferedWriter(new FileWriter(filePath, StandardCharsets.UTF_8))) {
             bw.write("tenant_id,first_name,last_name,email,contact,balance");
@@ -28,7 +23,6 @@ public final class ImportExportService {
             }
         }
     }
-
     public void exportPaymentsToCSV(List<Payment> payments, String filePath) throws IOException {
         try (BufferedWriter bw = new BufferedWriter(new FileWriter(filePath, StandardCharsets.UTF_8))) {
             bw.write("payment_id,tenant_id,amount_paid,payment_date,payment_method,status");
@@ -41,7 +35,6 @@ public final class ImportExportService {
             }
         }
     }
-
     public void exportPaymentsToJSON(List<Payment> payments, String filePath) throws IOException {
         try (BufferedWriter bw = new BufferedWriter(new FileWriter(filePath, StandardCharsets.UTF_8))) {
             bw.write("[");
@@ -66,25 +59,18 @@ public final class ImportExportService {
             bw.write("]");
         }
     }
-
-    /**
-     * @return int[] { imported, skipped }
-     */
     public int[] importTenantsFromCSV(String filePath, TenantDao dao) throws IOException {
         List<String> lines = Files.readAllLines(Path.of(filePath), StandardCharsets.UTF_8);
         if (lines.isEmpty()) {
             return new int[]{0, 0};
         }
-
         int imported = 0;
         int skipped = 0;
-
         Integer idxFirstName = null;
         Integer idxLastName = null;
         Integer idxEmail = null;
         Integer idxContact = null;
         Integer idxBalance = null;
-
         List<String> firstCols = splitCsv(lines.get(0));
         boolean hasHeaderRow = false;
         for (String column : firstCols) {
@@ -93,7 +79,6 @@ public final class ImportExportService {
                 break;
             }
         }
-
         int startIdx = 0;
         if (hasHeaderRow) {
             idxFirstName = columnIndex(firstCols, "first_name");
@@ -114,7 +99,6 @@ public final class ImportExportService {
             idxBalance = 5;
             startIdx = 0;
         }
-
         for (int i = startIdx; i < lines.size(); i++) {
             String raw = lines.get(i);
             if (raw == null || raw.isBlank()) {
@@ -122,7 +106,6 @@ public final class ImportExportService {
                 System.err.println("Skipped blank line.");
                 continue;
             }
-
             List<String> cols = splitCsv(raw);
             double balance = 0.0;
             if (idxBalance != null && cols.size() > idxBalance) {
@@ -132,34 +115,28 @@ public final class ImportExportService {
                     balance = 0.0;
                 }
             }
-
             if (cols.size() <= Math.max(idxFirstName, idxLastName)) {
                 skipped++;
                 System.err.println("Skipped row (missing columns): " + raw);
                 continue;
             }
-
             String firstName = unquote(cols.get(idxFirstName).trim());
             String lastName = unquote(cols.get(idxLastName).trim());
             String email = idxEmail != null && idxEmail < cols.size() ? unquote(cols.get(idxEmail).trim()) : "";
             String contact =
                     idxContact != null && idxContact < cols.size() ? unquote(cols.get(idxContact).trim()) : "";
-
             if (firstName.isBlank() || lastName.isBlank()) {
                 skipped++;
                 System.err.println("Skipped tenant row missing name: " + raw);
                 continue;
             }
-
             Tenant t = new Tenant(firstName, lastName, contact, email, balance);
             t.SetUserID(null);
             dao.Create(t);
             imported++;
         }
-
         return new int[]{imported, skipped};
     }
-
     private static Integer columnIndex(List<String> header, String key) {
         for (int i = 0; i < header.size(); i++) {
             if (key.equalsIgnoreCase(header.get(i).trim())) {
@@ -168,7 +145,6 @@ public final class ImportExportService {
         }
         return null;
     }
-
     private static List<String> splitCsv(String line) {
         List<String> cols = new ArrayList<>();
         StringBuilder sb = new StringBuilder();
@@ -192,7 +168,6 @@ public final class ImportExportService {
         cols.add(sb.toString());
         return cols;
     }
-
     private static String unquote(String s) {
         if (s == null) {
             return "";
@@ -204,7 +179,6 @@ public final class ImportExportService {
         }
         return t;
     }
-
     String escape(String s) {
         if (s == null) {
             return "";
@@ -214,7 +188,6 @@ public final class ImportExportService {
         }
         return s;
     }
-
     private static String jsonEscape(String s) {
         if (s == null) {
             return "";

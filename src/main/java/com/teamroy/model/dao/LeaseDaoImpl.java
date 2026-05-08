@@ -1,18 +1,14 @@
-package com.teamroy.model.dao;
-
+﻿package com.teamroy.model.dao;
 import com.teamroy.model.entity.Lease;
 import java.time.LocalDate;
 import java.util.*;
 import java.sql.*;
 import java.sql.Date;
-
 public class LeaseDaoImpl implements LeaseDao {
     private Connection conn;
-
     public LeaseDaoImpl(Connection conn) {
         this.conn = conn;
     }
-
     @Override
     public void Create(Lease lease) {
         String sql = "INSERT INTO LEASE (tenant_id, room_id, start_date, end_date, monthly_rent, status) VALUES (?, ?, ?, ?, ?, ?)";
@@ -24,7 +20,6 @@ public class LeaseDaoImpl implements LeaseDao {
             ps.setDouble(5, lease.GetMonthlyRent());
             ps.setString(6, lease.GetStatus());
             ps.executeUpdate();
-
             try (ResultSet rs = ps.getGeneratedKeys()) {
                 if (rs.next())
                     lease.SetLeaseID(rs.getInt(1));
@@ -33,7 +28,6 @@ public class LeaseDaoImpl implements LeaseDao {
             e.printStackTrace();
         }
     }
-
     @Override
     public Lease GetByID(int leaseId) {
         String sql = "SELECT * FROM LEASE WHERE lease_id = ?";
@@ -48,7 +42,6 @@ public class LeaseDaoImpl implements LeaseDao {
         }
         return null;
     }
-
     @Override
     public List<Lease> GetAll() {
         List<Lease> leases = new ArrayList<>();
@@ -62,7 +55,6 @@ public class LeaseDaoImpl implements LeaseDao {
         }
         return leases;
     }
-
     @Override
     public void Update(Lease lease) {
         String sql = "UPDATE LEASE SET tenant_id=?, room_id=?, start_date=?, end_date=?, monthly_rent=?, status=? WHERE lease_id=?";
@@ -79,7 +71,6 @@ public class LeaseDaoImpl implements LeaseDao {
             e.printStackTrace();
         }
     }
-
     @Override
     public void Delete(int leaseId) {
         String sql = "DELETE FROM LEASE WHERE lease_id = ?";
@@ -90,7 +81,6 @@ public class LeaseDaoImpl implements LeaseDao {
             e.printStackTrace();
         }
     }
-
     @Override
     public List<Lease> GetByTenantId(int tenantId) {
         List<Lease> leases = new ArrayList<>();
@@ -106,7 +96,6 @@ public class LeaseDaoImpl implements LeaseDao {
         }
         return leases;
     }
-
     @Override
     public Lease GetActiveLeaseByRoom(int roomId) {
         String sql = "SELECT * FROM LEASE WHERE room_id = ? AND status = 'ACTIVE' LIMIT 1";
@@ -121,7 +110,20 @@ public class LeaseDaoImpl implements LeaseDao {
         }
         return null;
     }
-
+    public List<Lease> GetActiveLeasesByRoom(int roomId) {
+        List<Lease> leases = new ArrayList<>();
+        String sql = "SELECT * FROM LEASE WHERE room_id = ? AND status = 'ACTIVE'";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, roomId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next())
+                    leases.add(ResultSetToLease(rs));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return leases;
+    }
     @Override
     public List<Lease> GetByStatus(String status) {
         List<Lease> leases = new ArrayList<>();
@@ -137,11 +139,9 @@ public class LeaseDaoImpl implements LeaseDao {
         }
         return leases;
     }
-
     @Override
     public List<Lease> GetExpiringSoon(LocalDate endDateThreshold) {
         List<Lease> leases = new ArrayList<>();
-        // Finds ACTIVE leases ending between today and the threshold date
         String sql = "SELECT * FROM LEASE WHERE status = 'ACTIVE' AND end_date <= ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setDate(1, Date.valueOf(endDateThreshold));
@@ -154,7 +154,6 @@ public class LeaseDaoImpl implements LeaseDao {
         }
         return leases;
     }
-
     @Override
     public boolean UpdateStatus(int leaseId, String status) {
         String sql = "UPDATE LEASE SET status = ? WHERE lease_id = ?";
@@ -167,10 +166,8 @@ public class LeaseDaoImpl implements LeaseDao {
             return false;
         }
     }
-
     @Override
     public boolean IsRoomAvailable(int roomId, LocalDate start, LocalDate end, Integer excludeLeaseId) {
-        // Overlap logic: (StartA <= EndB) and (EndA >= StartB), optional lease excluded (edit mode)
         String sql = "SELECT COUNT(*) FROM LEASE WHERE room_id = ? AND status = 'ACTIVE' "
                 + "AND (start_date <= ? AND end_date >= ?)";
         if (excludeLeaseId != null) {
@@ -193,7 +190,6 @@ public class LeaseDaoImpl implements LeaseDao {
         }
         return false;
     }
-
     private Lease ResultSetToLease(ResultSet rs) throws SQLException {
         Lease l = new Lease();
         l.SetLeaseID(rs.getInt("lease_id"));
@@ -205,5 +201,4 @@ public class LeaseDaoImpl implements LeaseDao {
         l.SetStatus(rs.getString("status"));
         return l;
     }
-
 }
