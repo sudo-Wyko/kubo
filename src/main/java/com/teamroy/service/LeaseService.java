@@ -9,8 +9,8 @@ public class LeaseService {
     public LeaseService(Connection conn) {
         this.leaseDao = new LeaseDaoImpl(conn);
     }
-    public Lease createLease(int tenantId, int roomId, LocalDate start, LocalDate end, double rent) {
-        boolean available = leaseDao.IsRoomAvailable(roomId, start, end, null);
+    public Lease createLease(int tenantId, int roomId, LocalDate start, LocalDate end, double rent, int roomCapacity) {
+        boolean available = leaseDao.IsRoomAvailableWithCapacity(roomId, start, end, null, roomCapacity);
         if (!available) {
             return null;
         }

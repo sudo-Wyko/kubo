@@ -62,7 +62,7 @@ public class TenantHomeController {
                     String name = rs.getString("first_name");
                     double balance = rs.getDouble("total_balance");
                     lblWelcome.setText("Welcome, " + (name != null ? name : "Tenant"));
-                    lblRentAmount.setText(String.format("â‚± %,.2f", balance));
+                    lblRentAmount.setText(String.format("\u20b1 %,.2f", balance));
                 }
             }
         } catch (SQLException e) {

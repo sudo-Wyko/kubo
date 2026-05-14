@@ -69,7 +69,7 @@ public class TenantPaymentsController {
         ComboBox<String> methodBox = new ComboBox<>();
         methodBox.getItems().addAll("Cash", "GCash", "Bank Transfer");
         methodBox.setValue("GCash");
-        grid.add(new Label("Amount (â‚±):"), 0, 0);
+        grid.add(new Label("Amount (\u20b1):"), 0, 0);
         grid.add(amountField, 1, 0);
         grid.add(new Label("Method:"), 0, 1);
         grid.add(methodBox, 1, 1);

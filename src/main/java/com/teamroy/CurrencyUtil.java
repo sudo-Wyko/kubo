@@ -11,6 +11,6 @@ public final class CurrencyUtil {
     private CurrencyUtil() {}
     public static String format(double amount) {
         String s = FMT.format(amount);
-        return s.replace("PHP", "â‚±").replace("Php", "â‚±").replace("PHâ‚±", "â‚±");
+        return s.replace("PHP", "\u20b1").replace("Php", "\u20b1").replace("PH\u20b1", "\u20b1");
     }
 }

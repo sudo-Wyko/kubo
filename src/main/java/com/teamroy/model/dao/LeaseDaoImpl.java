@@ -190,6 +190,31 @@ public class LeaseDaoImpl implements LeaseDao {
         }
         return false;
     }
+    @Override
+    public boolean IsRoomAvailableWithCapacity(int roomId, LocalDate start, LocalDate end, Integer excludeLeaseId, int capacity) {
+        String sql = "SELECT COUNT(*) FROM LEASE WHERE room_id = ? AND status = 'ACTIVE' "
+                + "AND (start_date <= ? AND end_date >= ?)";
+        if (excludeLeaseId != null) {
+            sql += " AND lease_id <> ?";
+        }
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, roomId);
+            ps.setDate(2, Date.valueOf(end));
+            ps.setDate(3, Date.valueOf(start));
+            if (excludeLeaseId != null) {
+                ps.setInt(4, excludeLeaseId);
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    int overlapCount = rs.getInt(1);
+                    return overlapCount < capacity;
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
     private Lease ResultSetToLease(ResultSet rs) throws SQLException {
         Lease l = new Lease();
         l.SetLeaseID(rs.getInt("lease_id"));

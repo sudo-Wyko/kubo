@@ -223,18 +223,18 @@ public class AdminTenantController {
     private String roomLabel(Tenant tenant) {
         Lease lease = pickLease(tenant);
         if (lease == null) {
-            return "â€”";
+            return "\u2014";
         }
         Room room = roomDao.GetByID(lease.GetRoomID());
         return room == null ? ("#" + lease.GetRoomID()) : room.GetRoomNumber();
     }
     private String leaseStart(Tenant tenant) {
         Lease lease = pickLease(tenant);
-        return lease == null ? "â€”" : lease.GetStartDate().toString();
+        return lease == null ? "\u2014" : lease.GetStartDate().toString();
     }
     private String leaseEnd(Tenant tenant) {
         Lease lease = pickLease(tenant);
-        return lease == null ? "â€”" : lease.GetEndDate().toString();
+        return lease == null ? "\u2014" : lease.GetEndDate().toString();
     }
     private String rentStatus(Tenant tenant) {
         return tenant.GetTotalBalance() <= 0.01 ? "Paid" : "Unpaid";
@@ -299,38 +299,38 @@ public class AdminTenantController {
     }
     private void onTenantSelected(Tenant tenant) {
         if (tenant == null) {
-            detailName.setText("â€”");
+            detailName.setText("\u2014");
             detailEmail.setText("");
             detailContact.setText("");
-            detailAddedDate.setText("Added: â€”");
+            detailAddedDate.setText("Added: \u2014");
             detailInitials.setText("TN");
-            detailBalance.setText("Total Balance: â€”");
-            detailRentStatus.setText("Rent status: â€”");
-            detailNextDue.setText("Next due: â€”");
-            detailRoomNumber.setText("Room: â€”");
-            detailRoomType.setText("Type: â€”");
-            detailLeaseStatus.setText("Lease status: â€”");
+            detailBalance.setText("Total Balance: \u2014");
+            detailRentStatus.setText("Rent status: \u2014");
+            detailNextDue.setText("Next due: \u2014");
+            detailRoomNumber.setText("Room: \u2014");
+            detailRoomType.setText("Type: \u2014");
+            detailLeaseStatus.setText("Lease status: \u2014");
             return;
         }
         detailInitials.setText(initials(tenant));
         detailName.setText(tenant.GetFirstName() + " " + tenant.GetLastName());
         detailEmail.setText(tenant.GetEmail());
         detailContact.setText(tenant.GetContactNumber());
-        detailAddedDate.setText("Added: â€”");
+        detailAddedDate.setText("Added: \u2014");
         detailBalance.setText("Total Balance: " + CurrencyUtil.format(tenant.GetTotalBalance()));
         detailRentStatus.setText("Rent status: " + rentStatus(tenant));
         Lease lease = pickLease(tenant);
         if (lease == null) {
-            detailNextDue.setText("Next due: â€”");
-            detailRoomNumber.setText("Room: â€”");
-            detailRoomType.setText("Type: â€”");
-            detailLeaseStatus.setText("Lease status: â€”");
+            detailNextDue.setText("Next due: \u2014");
+            detailRoomNumber.setText("Room: \u2014");
+            detailRoomType.setText("Type: \u2014");
+            detailLeaseStatus.setText("Lease status: \u2014");
             return;
         }
         Room room = roomDao.GetByID(lease.GetRoomID());
         detailLeaseStatus.setText("Lease status: " + lease.GetStatus());
         detailRoomNumber.setText("Room: " + (room == null ? ("#" + lease.GetRoomID()) : room.GetRoomNumber()));
-        detailRoomType.setText("Type: " + (room == null ? "â€”" : room.GetRoomType()));
+        detailRoomType.setText("Type: " + (room == null ? "\u2014" : room.GetRoomType()));
         LocalDate nextDue = lease.GetStartDate().plusMonths(1);
         detailNextDue.setText("Next due: " + MDFMT.format(nextDue));
         tenantTable.refresh();

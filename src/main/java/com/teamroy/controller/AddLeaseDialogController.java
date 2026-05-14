@@ -110,7 +110,7 @@ public class AddLeaseDialogController {
                 if (empty || item == null) {
                     setText(null);
                 } else {
-                    setText(item.GetRoomNumber() + " â€¢ " + item.GetRoomType());
+                    setText(item.GetRoomNumber() + " \u2022 " + item.GetRoomType());
                 }
             }
         };
@@ -165,7 +165,7 @@ public class AddLeaseDialogController {
         }
         if (editingLease == null) {
             Lease created =
-                    leaseService.createLease(tenant.GetTenantID(), room.GetRoomID(), start, end, rent);
+                    leaseService.createLease(tenant.GetTenantID(), room.GetRoomID(), start, end, rent, room.GetCapacity());
             if (created == null) {
                 Alert alert = new Alert(Alert.AlertType.ERROR);
                 alert.setTitle("Lease unavailable");

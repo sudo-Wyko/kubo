@@ -191,7 +191,7 @@ public class AdminMaintenanceController {
         description.setWrapText(true);
         description.setMaxHeight(48);
         description.setStyle("-fx-text-fill: #e2e8f0;");
-        String dateText = mr.GetReportedDate() == null ? "â€”"
+        String dateText = mr.GetReportedDate() == null ? "\u2014"
                 : mr.GetReportedDate().toLocalDate().toString();
         Label dateLabel = new Label("Reported: " + dateText);
         dateLabel.setStyle("-fx-text-fill: #94a3b8; -fx-font-size: 11px;");

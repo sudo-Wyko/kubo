@@ -31,7 +31,7 @@ public class TenantLeaseController {
             String startDate = activeLease.GetStartDate() != null ? activeLease.GetStartDate().toString() : "N/A";
             String endDate = activeLease.GetEndDate() != null ? activeLease.GetEndDate().toString() : "N/A";
             String status = activeLease.GetStatus() != null ? activeLease.GetStatus() : "N/A";
-            String monthlyRent = String.format("â‚±%,.2f", activeLease.GetMonthlyRent());
+            String monthlyRent = String.format("\u20b1%,.2f", activeLease.GetMonthlyRent());
             lblStartDate.setText(startDate);
             lblEndDate.setText(endDate);
             lblStatus.setText(status.toUpperCase());
@@ -40,7 +40,7 @@ public class TenantLeaseController {
             lblStartDate.setText("--/--/----");
             lblEndDate.setText("--/--/----");
             lblStatus.setText("NO LEASE");
-            lblMonthlyRent.setText("â‚±0.00");
+            lblMonthlyRent.setText("\u20b10.00");
         }
     }
 }

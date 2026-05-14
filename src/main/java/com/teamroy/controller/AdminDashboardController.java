@@ -204,8 +204,8 @@ public class AdminDashboardController {
             String tenantName = tenant == null ? ("Tenant#" + lease.GetTenantID())
                     : (tenant.GetFirstName() + " " + tenant.GetLastName());
             String roomLabel = room == null ? ("Room#" + lease.GetRoomID()) : room.GetRoomNumber();
-            return tenantName + " â€¢ Room " + roomLabel + " â€¢ ends "
-                    + lease.GetEndDate() + " â€¢ " + CurrencyUtil.format(lease.GetMonthlyRent());
+            return tenantName + " \u2022 Room " + roomLabel + " \u2022 ends "
+                    + lease.GetEndDate() + " \u2022 " + CurrencyUtil.format(lease.GetMonthlyRent());
         }).collect(Collectors.toList());
         expiringLeaseList.setItems(FXCollections.observableArrayList(lines));
     }
@@ -218,9 +218,9 @@ public class AdminDashboardController {
         List<String> lines = payments.stream().map(payment -> {
             Tenant t = tenantDao.GetByID(payment.GetTenantID());
             String name = t == null ? ("#" + payment.GetTenantID()) : (t.GetFirstName() + " " + t.GetLastName());
-            String when = payment.GetPaymentDate() == null ? "â€”" : PAYFMT.format(payment.GetPaymentDate());
+            String when = payment.GetPaymentDate() == null ? "\u2014" : PAYFMT.format(payment.GetPaymentDate());
             String amount = CurrencyUtil.format(payment.GetAmountPaid());
-            return when + " â€¢ " + name + " â€¢ " + amount + " â€¢ " + payment.GetStatus();
+            return when + " \u2022 " + name + " \u2022 " + amount + " \u2022 " + payment.GetStatus();
         }).collect(Collectors.toList());
         recentActivityList.setItems(FXCollections.observableArrayList(lines));
     }
@@ -241,7 +241,7 @@ public class AdminDashboardController {
                 if (trimmed.isEmpty()) {
                     continue;
                 }
-                Label lbl = new Label("â€¢ " + trimmed);
+                Label lbl = new Label("\u2022 " + trimmed);
                 lbl.setWrapText(true);
                 lbl.getStyleClass().add("row-description");
                 announcementsBox.getChildren().add(lbl);

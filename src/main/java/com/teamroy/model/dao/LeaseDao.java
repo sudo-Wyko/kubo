@@ -12,4 +12,5 @@ public interface LeaseDao extends GenericDao<Lease> {
     default boolean IsRoomAvailable(int roomId, LocalDate start, LocalDate end) {
         return IsRoomAvailable(roomId, start, end, null);
     }
+    boolean IsRoomAvailableWithCapacity(int roomId, LocalDate start, LocalDate end, Integer excludeLeaseId, int capacity);
 }
