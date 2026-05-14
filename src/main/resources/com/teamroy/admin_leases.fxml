@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.teamroy.controller.AdminLeaseController"
+            styleClass="content-view page-root">
+    <padding>
+        <Insets top="16" right="20" bottom="20" left="20"/>
+    </padding>
+    <top>
+        <VBox spacing="12">
+            <HBox spacing="12" alignment="CENTER_LEFT" styleClass="page-toolbar">
+                <Label text="Leases" styleClass="page-title"/>
+                <TextField fx:id="searchField" promptText="Search tenant or room" prefWidth="220" styleClass="form-control"/>
+                <ComboBox fx:id="statusFilterCombo" promptText="Status" prefWidth="160" styleClass="form-control"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Button text="+ Add New Lease" onAction="#handleAddLease"
+                        styleClass="primary-button"/>
+            </HBox>
+        </VBox>
+    </top>
+    <center>
+        <ScrollPane fx:id="leasesScrollPane" fitToWidth="true"
+                    styleClass="main-scroll-pane">
+            <FlowPane fx:id="leasesFlowPane" hgap="16" vgap="16"
+                      prefWrapLength="900"
+                      style="-fx-padding: 16 4 16 4;"
+                      styleClass="lease-flow"/>
+        </ScrollPane>
+    </center>
+</BorderPane>

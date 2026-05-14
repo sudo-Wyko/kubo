@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<VBox xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.teamroy.controller.AddLeaseDialogController"
+      spacing="12" prefWidth="460"
+      styleClass="content-view dialog-root card">
+    <padding><Insets top="20" right="24" bottom="20" left="24"/></padding>
+    <Label fx:id="titleLabel" text="Create lease" styleClass="dialog-title"/>
+    <Label text="Tenant *"/>
+    <ComboBox fx:id="tenantCombo" maxWidth="Infinity" styleClass="form-control"/>
+    <Label text="Room * (number — type)"/>
+    <ComboBox fx:id="roomCombo" maxWidth="Infinity" styleClass="form-control"/>
+    <Label text="Start date *"/>
+    <DatePicker fx:id="startPicker" maxWidth="Infinity" styleClass="form-control"/>
+    <Label text="End date *"/>
+    <DatePicker fx:id="endPicker" maxWidth="Infinity" styleClass="form-control"/>
+    <Label text="Monthly rent *"/>
+    <TextField fx:id="rentField" promptText="Greater than zero" styleClass="form-control"/>
+    <Label fx:id="dateErrorLabel" managed="false" visible="false" wrapText="true"
+           styleClass="error-label"/>
+    <Label fx:id="errorLabel" managed="false" visible="false" wrapText="true" styleClass="error-label"/>
+    <HBox spacing="12" alignment="CENTER_RIGHT">
+        <Button text="Cancel" onAction="#cancel" styleClass="secondary-button"/>
+        <Button fx:id="saveButton" text="Save" onAction="#save"
+                styleClass="primary-button"/>
+    </HBox>
+</VBox>

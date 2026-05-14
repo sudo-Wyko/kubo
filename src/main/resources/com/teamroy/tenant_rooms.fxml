@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox spacing="20" styleClass="content-view" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.teamroy.controller.TenantRoomsController">
+    <padding>
+        <Insets top="30" right="30" bottom="30" left="30"/>
+    </padding>
+
+    <Label text="Rooms" styleClass="payments-header"/>
+    <ComboBox fx:id="statusFilter" promptText="Filter by Status"/>
+    <ScrollPane fitToWidth="true" styleClass="main-scroll-pane" VBox.vgrow="ALWAYS">
+        
+        <FlowPane fx:id="roomGrid" hgap="25" vgap="25" styleClass="content-view">
+            </FlowPane>
+        
+    </ScrollPane>
+</VBox>

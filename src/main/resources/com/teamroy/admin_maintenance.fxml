@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.teamroy.controller.AdminMaintenanceController"
+            styleClass="content-view page-root">
+    <padding>
+        <Insets top="16" right="20" bottom="20" left="20"/>
+    </padding>
+
+    <top>
+        <HBox spacing="12" alignment="CENTER_LEFT" styleClass="page-toolbar">
+            <Label text="Maintenance" styleClass="page-title"/>
+            <ComboBox fx:id="roomFilterCombo" promptText="By Room" prefWidth="200" styleClass="form-control"/>
+            <ComboBox fx:id="statusFilterCombo" promptText="By Status" prefWidth="180" styleClass="form-control"/>
+            <DatePicker fx:id="dateFilterPicker" promptText="By Date" styleClass="form-control"/>
+        </HBox>
+    </top>
+
+    <center>
+        <HBox spacing="16" alignment="TOP_CENTER" styleClass="kanban-board">
+            <VBox fx:id="columnTotal" spacing="10" prefWidth="260" HBox.hgrow="ALWAYS">
+                <Label text="Total Requests" maxWidth="Infinity" alignment="CENTER"
+                       styleClass="kanban-header kanban-total"/>
+                <ScrollPane fitToWidth="true" styleClass="main-scroll-pane">
+                    <VBox fx:id="kanbanTotalBody" spacing="12" style="-fx-padding: 8;" styleClass="kanban-body"/>
+                </ScrollPane>
+            </VBox>
+
+            <VBox fx:id="columnOpen" spacing="10" prefWidth="260" HBox.hgrow="ALWAYS">
+                <Label text="Open Requests" maxWidth="Infinity" alignment="CENTER"
+                       styleClass="kanban-header kanban-open"/>
+                <ScrollPane fitToWidth="true" styleClass="main-scroll-pane">
+                    <VBox fx:id="kanbanOpenBody" spacing="12" style="-fx-padding: 8;" styleClass="kanban-body"/>
+                </ScrollPane>
+            </VBox>
+
+            <VBox fx:id="columnUrgent" spacing="10" prefWidth="260" HBox.hgrow="ALWAYS">
+                <Label text="Urgent Requests" maxWidth="Infinity" alignment="CENTER"
+                       styleClass="kanban-header kanban-urgent"/>
+                <ScrollPane fitToWidth="true" styleClass="main-scroll-pane">
+                    <VBox fx:id="kanbanUrgentBody" spacing="12" style="-fx-padding: 8;" styleClass="kanban-body"/>
+                </ScrollPane>
+            </VBox>
+
+            <VBox fx:id="columnCompleted" spacing="10" prefWidth="260" HBox.hgrow="ALWAYS">
+                <Label text="Completed" maxWidth="Infinity" alignment="CENTER"
+                       styleClass="kanban-header kanban-completed"/>
+                <ScrollPane fitToWidth="true" styleClass="main-scroll-pane">
+                    <VBox fx:id="kanbanCompletedBody" spacing="12" style="-fx-padding: 8;" styleClass="kanban-body"/>
+                </ScrollPane>
+            </VBox>
+        </HBox>
+    </center>
+</BorderPane>

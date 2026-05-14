@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.teamroy.controller.AdminController"
+            prefHeight="720.0" prefWidth="1080.0"
+            styleClass="content-view">
+
+    <left>
+        <VBox spacing="10" prefWidth="250.0" styleClass="sidebar">
+            <padding>
+                <Insets top="40" right="20" bottom="40" left="20"/>
+            </padding>
+
+            <Label text="Admin" styleClass="card-title"/>
+
+            <Button fx:id="btnDashboard" text="Dashboard" onAction="#loadDashboardView" maxWidth="Infinity"
+                    styleClass="nav-button"/>
+
+            <Button fx:id="btnTenants" text="Tenants" onAction="#loadTenantsView" maxWidth="Infinity"
+                    styleClass="nav-button"/>
+
+            <Button fx:id="btnRooms" text="Rooms" onAction="#loadRoomsView" maxWidth="Infinity"
+                    styleClass="nav-button"/>
+
+            <Button fx:id="btnLeases" text="Leases" onAction="#loadLeasesView" maxWidth="Infinity"
+                    styleClass="nav-button"/>
+
+            <Button fx:id="btnPayments" text="Payments" onAction="#loadPaymentsView" maxWidth="Infinity"
+                    styleClass="nav-button"/>
+
+            <Button fx:id="btnMaintenance" text="Maintenance" onAction="#loadMaintenanceView" maxWidth="Infinity"
+                    styleClass="nav-button"/>
+
+            <Region VBox.vgrow="ALWAYS"/>
+
+            <Button fx:id="btnLogout" text="Logout" onAction="#handleLogout" maxWidth="Infinity"
+                    styleClass="logout-button"/>
+        </VBox>
+    </left>
+
+    <center>
+        <StackPane fx:id="contentArea" styleClass="content-view">
+            <padding>
+                <Insets top="20" right="20" bottom="20" left="20"/>
+            </padding>
+        </StackPane>
+    </center>
+</BorderPane>

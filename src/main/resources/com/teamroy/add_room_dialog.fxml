@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<VBox xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.teamroy.controller.AddRoomDialogController"
+      spacing="12" prefWidth="420"
+      styleClass="content-view dialog-root card">
+    <padding><Insets top="20" right="24" bottom="20" left="24"/></padding>
+    <Label fx:id="titleLabel" text="Add room" styleClass="dialog-title"/>
+    <Label text="Room number *"/>
+    <TextField fx:id="roomNumberField" promptText="e.g., 301" styleClass="form-control"/>
+    <Label text="Room type *"/>
+    <ComboBox fx:id="typeCombo" maxWidth="Infinity" styleClass="form-control"/>
+    <Label text="Capacity *"/>
+    <TextField fx:id="capacityField" promptText="Beds" styleClass="form-control"/>
+    <Label text="Price / month"/>
+    <HBox spacing="10" alignment="CENTER_LEFT">
+        <Label text="₱" styleClass="card-subtitle"/>
+        <TextField fx:id="priceField" promptText="0.00" HBox.hgrow="ALWAYS" styleClass="form-control"/>
+    </HBox>
+    <Label fx:id="errorLabel" managed="false" visible="false" wrapText="true" styleClass="error-label"/>
+    <HBox spacing="12" alignment="CENTER_RIGHT">
+        <Button text="Cancel" onAction="#cancel" styleClass="secondary-button"/>
+        <Button fx:id="saveButton" text="Save" onAction="#save"
+                styleClass="primary-button"/>
+    </HBox>
+</VBox>

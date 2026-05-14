@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.teamroy.controller.AdminTenantController"
+            styleClass="content-view page-root">
+    <padding><Insets top="12" bottom="16" left="16" right="16"/></padding>
+
+    <top>
+        <HBox spacing="10" alignment="CENTER_LEFT" styleClass="page-toolbar">
+            <Label text="Tenants" styleClass="page-title"/>
+            <TextField fx:id="searchField" promptText="Search by name" prefWidth="200" styleClass="form-control"/>
+            <ComboBox fx:id="roomFilterCombo" promptText="By Room" prefWidth="160" styleClass="form-control"/>
+            <ComboBox fx:id="statusFilterCombo" promptText="By Status" prefWidth="160" styleClass="form-control"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button text="Export CSV" onAction="#handleExportCsv"
+                    styleClass="secondary-button"/>
+            <Button text="Import Tenants (CSV)" onAction="#handleImportCsv"
+                    styleClass="secondary-button"/>
+            <Button text="+ Add New Tenant" onAction="#handleAddTenant"
+                    styleClass="primary-button"/>
+        </HBox>
+    </top>
+
+    <center>
+        <SplitPane dividerPositions="0.6" styleClass="split-pane-clean">
+            <VBox spacing="10" style="-fx-padding: 0 8 0 0;" styleClass="card">
+                <Label text="Active tenants" styleClass="card-title"/>
+                <TableView fx:id="tenantTable" prefHeight="520" VBox.vgrow="ALWAYS" styleClass="table-clean">
+                    <columns>
+                        <TableColumn fx:id="colAvatar" text="" prefWidth="60"/>
+                        <TableColumn fx:id="colName" text="Tenant name" prefWidth="170"/>
+                        <TableColumn fx:id="colRoom" text="Room" prefWidth="100"/>
+                        <TableColumn fx:id="colLeaseStart" text="Lease start" prefWidth="110"/>
+                        <TableColumn fx:id="colLeaseEnd" text="Lease end" prefWidth="110"/>
+                        <TableColumn fx:id="colRentStatus" text="Rent status" prefWidth="110"/>
+                        <TableColumn fx:id="colReqCount" text="Requests" prefWidth="80"/>
+                    </columns>
+                </TableView>
+            </VBox>
+
+            <ScrollPane fitToWidth="true" styleClass="main-scroll-pane">
+                <VBox fx:id="detailPanel" spacing="12" styleClass="card">
+                    <HBox spacing="14" alignment="TOP_LEFT">
+                        <StackPane prefWidth="80" prefHeight="80"
+                                   styleClass="avatar-circle">
+                            <Label fx:id="detailInitials" text="TN"
+                                   styleClass="avatar-initials"/>
+                        </StackPane>
+                        <VBox spacing="6">
+                            <Label fx:id="detailName" text="—" styleClass="page-title"/>
+                            <Label fx:id="detailEmail" text="" styleClass="card-subtitle" wrapText="true"/>
+                            <Label fx:id="detailContact" text="" styleClass="card-subtitle" wrapText="true"/>
+                            <Label fx:id="detailAddedDate" text="Added: —" styleClass="card-subtitle"/>
+                        </VBox>
+                    </HBox>
+
+                    <Label fx:id="detailBalance" text="Total Balance: ₱0.00" styleClass="card-title"/>
+                    <Label fx:id="detailRentStatus" text="Rent status: —" styleClass="dashboard-warn"/>
+                    <Label fx:id="detailNextDue" text="Next due: —" styleClass="dashboard-positive"/>
+
+                    <VBox spacing="6" styleClass="card card-compact">
+                        <Label text="Room / lease snapshot" styleClass="card-subtitle"/>
+                        <Label fx:id="detailRoomNumber" styleClass="row-description" text="Room: —"/>
+                        <Label fx:id="detailRoomType" styleClass="card-subtitle" text="Type: —"/>
+                        <Label fx:id="detailLeaseStatus" styleClass="card-subtitle" text="Lease status: —"/>
+                    </VBox>
+
+                    <HBox spacing="10">
+                        <Button text="Edit" onAction="#handleEditTenant" prefWidth="100"
+                                styleClass="primary-button"/>
+                        <Button text="Remove" onAction="#handleRemoveTenant" prefWidth="100"
+                                styleClass="logout-button"/>
+                    </HBox>
+                </VBox>
+            </ScrollPane>
+        </SplitPane>
+    </center>
+
+    <bottom>
+        <VBox spacing="8" style="-fx-padding: 14 0 0 0;" styleClass="card card-compact">
+            <ToggleButton fx:id="archivedToggle" text="Show archived tenants" styleClass="secondary-button"/>
+            <TableView fx:id="archivedTable" prefHeight="180" visible="false" managed="false" styleClass="table-clean">
+                <columns>
+                    <TableColumn fx:id="archColName" text="Tenant" prefWidth="220"/>
+                    <TableColumn fx:id="archColEmail" text="Email" prefWidth="200"/>
+                    <TableColumn fx:id="archActions" text="Actions" prefWidth="120"/>
+                </columns>
+            </TableView>
+        </VBox>
+    </bottom>
+</BorderPane>

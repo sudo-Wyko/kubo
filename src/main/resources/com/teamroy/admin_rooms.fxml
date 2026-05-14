@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.teamroy.controller.AdminRoomController"
+            styleClass="content-view page-root">
+    <padding>
+        <Insets top="16" right="20" bottom="20" left="20"/>
+    </padding>
+    <top>
+        <VBox spacing="12">
+            <HBox spacing="12" alignment="CENTER_LEFT" styleClass="page-toolbar">
+                <Label text="Rooms" styleClass="page-title"/>
+                <TextField fx:id="searchField" promptText="Search room number" prefWidth="200" styleClass="form-control"/>
+                <ComboBox fx:id="typeFilterCombo" promptText="Type" prefWidth="160" styleClass="form-control"/>
+                <ComboBox fx:id="statusFilterCombo" promptText="Status" prefWidth="160" styleClass="form-control"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Button text="+ Add New Room" onAction="#handleAddRoom"
+                        styleClass="primary-button"/>
+            </HBox>
+        </VBox>
+    </top>
+    <center>
+        <VBox spacing="10" styleClass="card">
+            <TableView fx:id="roomTable" styleClass="table-clean" VBox.vgrow="ALWAYS">
+            <columns>
+                <TableColumn fx:id="colId" text="ID" prefWidth="50"/>
+                <TableColumn fx:id="colNumber" text="Room Number" prefWidth="100"/>
+                <TableColumn fx:id="colType" text="Type" prefWidth="100"/>
+                <TableColumn fx:id="colCapacity" text="Capacity" prefWidth="80"/>
+                <TableColumn fx:id="colOccupancy" text="Occupancy" prefWidth="100"/>
+                <TableColumn fx:id="colPrice" text="Price/month" prefWidth="120"/>
+                <TableColumn fx:id="colStatus" text="Status" prefWidth="110"/>
+                <TableColumn fx:id="colMaintenance" text="Maintenance Info" prefWidth="220"/>
+                <TableColumn fx:id="colActions" text="" prefWidth="150"/>
+            </columns>
+        </TableView>
+        </VBox>
+    </center>
+</BorderPane>

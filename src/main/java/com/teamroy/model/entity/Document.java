@@ -1,0 +1,47 @@
+﻿package com.teamroy.model.entity;
+import java.time.LocalDateTime;
+public class Document {
+    private int documentId;
+    private int tenantId;
+    private String title;
+    private String filePath;
+    private LocalDateTime uploadedAt;
+    public Document() {
+    }
+    public Document(int tenantId, String title, String filePath, LocalDateTime uploadedAt) {
+        this.tenantId = tenantId;
+        this.title = title;
+        this.filePath = filePath;
+        this.uploadedAt = uploadedAt;
+    }
+    public int GetDocumentID() {
+        return documentId;
+    }
+    public int GetTenantID() {
+        return tenantId;
+    }
+    public String GetTitle() {
+        return title;
+    }
+    public String GetFilePath() {
+        return filePath;
+    }
+    public LocalDateTime GetTimeUploadedAt() {
+        return uploadedAt;
+    }
+    public void SetDocumentID(int documentId) {
+        this.documentId = documentId;
+    }
+    public void SetTenantID(int tenantId) {
+        this.tenantId = tenantId;
+    }
+    public void SetTitle(String title) {
+        this.title = title;
+    }
+    public void SetFilePath(String filePath) {
+        this.filePath = filePath;
+    }
+    public void SetTimeUploadedAt(LocalDateTime uploadedAt) {
+        this.uploadedAt = uploadedAt;
+    }
+}

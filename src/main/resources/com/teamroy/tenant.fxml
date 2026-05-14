@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+<BorderPane xmlns="http://javafx.com/javafx/17"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.teamroy.controller.TenantController"
+            prefHeight="720.0" prefWidth="1080.0"
+            stylesheets="@style.css"
+            styleClass="content-view">
+
+    <left>
+        <VBox spacing="4" prefWidth="220.0" styleClass="sidebar">
+            <padding>
+                <Insets top="32" right="12" bottom="32" left="12"/>
+            </padding>
+
+            <!-- App / branding label -->
+            <Label text="Tenant Portal" styleClass="card-title">
+                <VBox.margin>
+                    <Insets bottom="24"/>
+                </VBox.margin>
+            </Label>
+
+            <Button fx:id="btnHome"        text="🏠  Home"                 onAction="#LoadHomeView"        maxWidth="Infinity" styleClass="nav-button"/>
+            <Button fx:id="btnRooms"       text="🚪  Rooms"                onAction="#LoadRoomsView"       maxWidth="Infinity" styleClass="nav-button"/>
+            <Button fx:id="btnPayments"    text="💳  Payments"             onAction="#LoadPaymentsView"    maxWidth="Infinity" styleClass="nav-button"/>
+            <Button fx:id="btnLease"       text="📄  Lease Details"        onAction="#LoadLeaseView"       maxWidth="Infinity" styleClass="nav-button"/>
+            <Button fx:id="btnMaintenance" text="🔧  Maintenance Requests" onAction="#LoadMaintenanceView" maxWidth="Infinity" styleClass="nav-button"/>
+
+            <Region VBox.vgrow="ALWAYS"/>
+
+            <Button text="⚙️  Edit Account" onAction="#LoadAccountView" maxWidth="Infinity" styleClass="nav-button"/>
+            <Button text="Logout"           onAction="#handleLogout"    maxWidth="Infinity" styleClass="logout-button"/>
+        </VBox>
+    </left>
+
+    <center>
+        <StackPane fx:id="contentArea" styleClass="content-view"/>
+    </center>
+
+</BorderPane>
