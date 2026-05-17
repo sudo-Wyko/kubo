@@ -1,12 +1,13 @@
 module com.teamroy {
-    requires javafx.controls;
+    requires transitive javafx.controls;
     requires transitive javafx.fxml;
     requires transitive java.sql;
-
+    requires java.desktop;
     opens com.teamroy to javafx.fxml;
-
-    exports com.teamroy;
-
     opens com.teamroy.controller to javafx.fxml;
-
+    opens com.teamroy.model.entity to javafx.base;
+    exports com.teamroy;
+    exports com.teamroy.service;
+    exports com.teamroy.model.entity;
+    exports com.teamroy.model.dao;
 }

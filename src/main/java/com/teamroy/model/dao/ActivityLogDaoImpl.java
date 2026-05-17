@@ -4,32 +4,26 @@ import com.teamroy.model.entity.ActivityLog;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.sql.*;
-
 public class ActivityLogDaoImpl implements ActivityLogDao {
     private Connection conn;
-
     public ActivityLogDaoImpl(Connection conn) {
         this.conn = conn;
     }
-
     @Override
     public void Create(ActivityLog entity) {
-        // Omitting created_at so the database handles it via DEFAULT CURRENT_TIMESTAMP
         String sql = "INSERT INTO ACTIVITY_LOG (tenant_id, description) VALUES (?, ?)";
         try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setInt(1, entity.GetTenantID());
             ps.setString(2, entity.GetDescription());
             ps.executeUpdate();
-
             try (ResultSet rs = ps.getGeneratedKeys()) {
                 if (rs.next())
                     entity.SetActivityID(rs.getInt(1));
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw new DaoException("Could not create activity log: " + e.getMessage(), e);
         }
     }
-
     @Override
     public ActivityLog GetByID(int id) {
         String sql = "SELECT * FROM ACTIVITY_LOG WHERE activity_id = ?";
@@ -44,7 +38,6 @@ public class ActivityLogDaoImpl implements ActivityLogDao {
         }
         return null;
     }
-
     @Override
     public List<ActivityLog> GetAll() {
         List<ActivityLog> logs = new ArrayList<>();
@@ -58,7 +51,6 @@ public class ActivityLogDaoImpl implements ActivityLogDao {
         }
         return logs;
     }
-
     @Override
     public void Update(ActivityLog entity) {
         String sql = "UPDATE ACTIVITY_LOG SET tenant_id=?, description=?, created_at=? WHERE activity_id=?";
@@ -72,7 +64,6 @@ public class ActivityLogDaoImpl implements ActivityLogDao {
             e.printStackTrace();
         }
     }
-
     @Override
     public void Delete(int id) {
         String sql = "DELETE FROM ACTIVITY_LOG WHERE activity_id = ?";
@@ -83,7 +74,6 @@ public class ActivityLogDaoImpl implements ActivityLogDao {
             e.printStackTrace();
         }
     }
-
     @Override
     public List<ActivityLog> GetByTenantID(int tenantId) {
         List<ActivityLog> logs = new ArrayList<>();
@@ -99,7 +89,6 @@ public class ActivityLogDaoImpl implements ActivityLogDao {
         }
         return logs;
     }
-
     @Override
     public List<ActivityLog> GetRecentByTenantID(int tenantId, int limit) {
         List<ActivityLog> logs = new ArrayList<>();
@@ -116,7 +105,6 @@ public class ActivityLogDaoImpl implements ActivityLogDao {
         }
         return logs;
     }
-
     @Override
     public List<ActivityLog> GetByDateRange(LocalDateTime start, LocalDateTime end) {
         List<ActivityLog> logs = new ArrayList<>();
@@ -133,7 +121,6 @@ public class ActivityLogDaoImpl implements ActivityLogDao {
         }
         return logs;
     }
-
     @Override
     public void DeleteByTenantID(int tenantId) {
         String sql = "DELETE FROM ACTIVITY_LOG WHERE tenant_id = ?";
@@ -144,7 +131,6 @@ public class ActivityLogDaoImpl implements ActivityLogDao {
             e.printStackTrace();
         }
     }
-
     private ActivityLog ResultSetToActivityLog(ResultSet rs) throws SQLException {
         ActivityLog a = new ActivityLog();
         a.SetActivityID(rs.getInt("activity_id"));

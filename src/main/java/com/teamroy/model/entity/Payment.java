@@ -4,30 +4,29 @@ import java.time.LocalDateTime;
 
 public class Payment {
     private int paymentId;
-    private int tenantId;
+    private int leaseId;
     private double amountPaid;
     private LocalDateTime paymentDate;
     private String paymentMethod;
-    private String status; // 'PENDING', 'VERIFIED', 'FAILED'
+    private String status;
 
     public Payment() {
     }
 
-    public Payment(int tenantId, double amountPaid, LocalDateTime paymentDate, String paymentMethod, String status) {
-        this.tenantId = tenantId;
+    public Payment(int leaseId, double amountPaid, LocalDateTime paymentDate, String paymentMethod, String status) {
+        this.leaseId = leaseId;
         this.amountPaid = amountPaid;
         this.paymentDate = paymentDate;
         this.paymentMethod = paymentMethod;
         this.status = status;
     }
 
-    // -- Getters --
     public int GetPaymentID() {
         return paymentId;
     }
 
-    public int GetTenantID() {
-        return tenantId;
+    public int GetLeaseID() {
+        return leaseId;
     }
 
     public double GetAmountPaid() {
@@ -46,13 +45,12 @@ public class Payment {
         return status;
     }
 
-    // -- Setters --
     public void SetPaymentID(int paymentId) {
         this.paymentId = paymentId;
     }
 
-    public void SetTenantID(int tenantId) {
-        this.tenantId = tenantId;
+    public void SetLeaseID(int leaseId) {
+        this.leaseId = leaseId;
     }
 
     public void SetAmountPaid(double amountPaid) {
@@ -70,5 +68,4 @@ public class Payment {
     public void SetStatus(String status) {
         this.status = status;
     }
-
 }

@@ -1,274 +1,242 @@
 package com.teamroy.controller;
 
 import com.teamroy.App;
-import com.teamroy.DatabaseUtility;
-import com.teamroy.model.dao.RoomDao;
-import com.teamroy.model.dao.RoomDaoImpl; // Uncomment when DB is ready
-import com.teamroy.model.dao.MaintenanceRequestDao;
-import com.teamroy.model.dao.MaintenanceRequestDaoImpl;
-import com.teamroy.model.entity.Room;
-import com.teamroy.model.entity.MaintenanceRequest;
-import java.io.IOException;
-import java.util.List;
-import java.util.Optional;
-import java.sql.Connection;
-
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-import javafx.collections.transformation.FilteredList;
-import javafx.collections.transformation.SortedList;
+import com.teamroy.ConnectionManager;
+import com.teamroy.SessionManager;
+import com.teamroy.PasswordUtil;
 import javafx.fxml.FXML;
-import javafx.scene.control.*;
-import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.layout.GridPane;
+import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
-import javafx.beans.property.SimpleStringProperty;
+import javafx.scene.Parent;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonBar;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.Dialog;
+import javafx.scene.control.Label;
+import javafx.scene.control.PasswordField;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.StackPane;
+
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.List;
 
 public class AdminController {
-
-    // Top Bar Tools
-    @FXML
-    private TextField searchField;
-    @FXML
-    private ComboBox<String> filterType;
-    @FXML
-    private ComboBox<String> filterStatus;
-
-    // Table
-    @FXML
-    private TableView<Room> roomTable;
-    @FXML
-    private TableColumn<Room, Integer> colRoomId;
-    @FXML
-    private TableColumn<Room, String> colRoomNumber;
-    @FXML
-    private TableColumn<Room, String> colRoomType;
-    @FXML
-    private TableColumn<Room, Integer> colCapacity;
-    @FXML
-    private TableColumn<Room, Integer> colOccupancy;
-    @FXML
-    private TableColumn<Room, String> colStatus;
-    @FXML
-    private TableColumn<Room, String> colMaintenance;
-
-    private ObservableList<Room> roomList;
-    private FilteredList<Room> filteredData;
-
-    // DAO Instance
-    private RoomDao roomDao;
-    private MaintenanceRequestDao maintenanceDao;
+    private Connection conn = ConnectionManager.getConnection();
 
     @FXML
-    public void initialize() {
-        // 1. Initialize DAOs (Assuming you have a DatabaseConnection utility class)
-        Connection conn = DatabaseUtility.getConnection();
+    private StackPane contentArea;
+    @FXML
+    private Button btnDashboard;
+    @FXML
+    private Button btnTenants;
+    @FXML
+    private Button btnRooms;
+    @FXML
+    private Button btnLeases;
+    @FXML
+    private Button btnPayments;
+    @FXML
+    private Button btnMaintenance;
+    @FXML
+    private Button btnAccount; // Linked to your new FXML button
+    @FXML
+    private Button btnLogout;
 
-        // 3. It's always best practice to check if the connection was successful!
-        if (conn != null) {
-            roomDao = new RoomDaoImpl(conn);
-            maintenanceDao = new MaintenanceRequestDaoImpl(conn);
+    private static final String ACTIVE_CLASS = "nav-button-active";
 
-            // 4. Load your data from the DB now that the DAOs are ready
-            // loadTenantData();
-        } else {
-            System.err.println("Error: Database connection is null in AdminTenantController.");
-        }
+    @FXML
+    private void initialize() {
+        switchView("admin_dashboard.fxml", btnDashboard);
+    }
 
-        // 2. Setup Filters
-        filterType.setItems(FXCollections.observableArrayList("All Types", "Single", "Double", "Dormitory"));
-        filterType.setValue("All Types");
-
-        filterStatus
-                .setItems(FXCollections.observableArrayList("All Statuses", "Available", "Occupied", "Maintenance"));
-        filterStatus.setValue("All Statuses");
-
-        // 3. Link Columns to Model
-        colRoomId.setCellValueFactory(new PropertyValueFactory<>("roomId"));
-        colRoomNumber.setCellValueFactory(new PropertyValueFactory<>("roomNumber"));
-        colRoomType.setCellValueFactory(new PropertyValueFactory<>("roomType"));
-        colCapacity.setCellValueFactory(new PropertyValueFactory<>("capacity"));
-        colOccupancy.setCellValueFactory(new PropertyValueFactory<>("currentOccupancy"));
-
-        // Note: Assuming you added 'status' and 'maintenance' as transient/UI fields in
-        // your Room POJO
-        // Custom mapping for Status: Calculate based on Occupancy vs Capacity
-        colStatus.setCellValueFactory(cellData -> {
-            Room room = cellData.getValue();
-            if (room.GetCurrentOccupancy() >= room.GetCapacity()) {
-                return new SimpleStringProperty("Occupied");
-            } else {
-                return new SimpleStringProperty("Available");
+    private void setActiveButton(Button activeButton) {
+        // Added btnAccount to this list so it deselects other tabs when clicked
+        List<Button> allButtons =
+                Arrays.asList(btnDashboard, btnTenants, btnRooms, btnLeases, btnPayments, btnMaintenance, btnAccount);
+        for (Button btn : allButtons) {
+            if (btn != null) {
+                btn.getStyleClass().remove(ACTIVE_CLASS);
             }
-        });
-
-        // Custom mapping for Maintenance: Fetch from the Maintenance table dynamically
-        colMaintenance.setCellValueFactory(cellData -> {
-            Room room = cellData.getValue();
-
-            if (maintenanceDao != null) {
-                // Fetch all requests for this specific room
-                List<MaintenanceRequest> requests = maintenanceDao.GetByRoomID(room.GetRoomID());
-
-                // Loop through to see if any are NOT resolved
-                for (MaintenanceRequest req : requests) {
-                    if (!req.GetStatus().equalsIgnoreCase("RESOLVED")) {
-                        // Return the description of the active issue (e.g., "Pending AC repair")
-                        return new SimpleStringProperty(req.GetReportDescription());
-                    }
-                }
+        }
+        if (activeButton != null) {
+            if (!activeButton.getStyleClass().contains(ACTIVE_CLASS)) {
+                activeButton.getStyleClass().add(ACTIVE_CLASS);
             }
-            // If no active requests are found, it's all clear
-            return new SimpleStringProperty("None");
-        });
-
-        // 4. Load Actual Data from Database (Using PascalCase DAO method)
-        loadTableData();
-
-        // 5. Setup Search and Filter Logic
-        setupSearchAndFilter();
-    }
-
-    private void loadTableData() {
-        // Fetch from Database instead of dummy data
-        // List<Room> dbRooms = roomDao.GetAll();
-
-        // Temporarily keeping null check in case DAO isn't hooked up yet
-        if (roomDao != null) {
-            List<Room> dbRooms = roomDao.GetAll();
-            roomList = FXCollections.observableArrayList(dbRooms);
-        } else {
-            roomList = FXCollections.observableArrayList(); // Empty fallback
-        }
-
-        if (filteredData != null) {
-            filteredData = new FilteredList<>(roomList, b -> true);
-            setupSearchAndFilter();
         }
     }
 
-    private void setupSearchAndFilter() {
-        if (filteredData == null) {
-            filteredData = new FilteredList<>(roomList, b -> true);
-        }
-
-        searchField.textProperty().addListener((observable, oldValue, newValue) -> updatePredicate());
-        filterType.valueProperty().addListener((observable, oldValue, newValue) -> updatePredicate());
-        filterStatus.valueProperty().addListener((observable, oldValue, newValue) -> updatePredicate());
-
-        SortedList<Room> sortedData = new SortedList<>(filteredData);
-        sortedData.comparatorProperty().bind(roomTable.comparatorProperty());
-        roomTable.setItems(sortedData);
-    }
-
-    private void updatePredicate() {
-        filteredData.setPredicate(room -> {
-            String searchText = searchField.getText() == null ? "" : searchField.getText().toLowerCase();
-            String type = filterType.getValue();
-            String statusFilter = filterStatus.getValue();
-
-            // 1. Check Search Bar
-            boolean matchesSearch = searchText.isEmpty() || room.GetRoomNumber().toLowerCase().contains(searchText);
-
-            // 2. Check Type Dropdown
-            boolean matchesType = type.equals("All Types") || room.GetRoomType().equals(type);
-
-            // 3. Calculate the actual status dynamically for the filter
-            String actualStatus;
-            if (room.GetCurrentOccupancy() >= room.GetCapacity()) {
-                actualStatus = "Occupied";
-            } else {
-                actualStatus = "Available";
+    private void switchView(String fxmlFileName, Button targetButton) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/teamroy/" + fxmlFileName));
+            Parent view = loader.load();
+            Object controller = loader.getController();
+            if (controller instanceof AdminDashboardController) {
+                ((AdminDashboardController) controller).setAdminController(this);
             }
-
-            // Check Status Dropdown against our calculated actualStatus
-            boolean matchesStatus = statusFilter.equals("All Statuses") || actualStatus.equals(statusFilter);
-
-            return matchesSearch && matchesType && matchesStatus;
-        });
+            contentArea.getChildren().clear();
+            contentArea.getChildren().add(view);
+            setActiveButton(targetButton);
+        } catch (IOException e) {
+            System.err.println("Could not load view: " + fxmlFileName);
+            e.printStackTrace();
+        }
     }
 
     @FXML
-    public void handleAddRoom() {
-        Dialog<Room> dialog = new Dialog<>();
-        dialog.setTitle("Add New Room");
-        dialog.setHeaderText("Enter details for the new room.");
+    private void loadDashboardView() {
+        switchView("admin_dashboard.fxml", btnDashboard);
+    }
 
-        ButtonType saveButtonType = new ButtonType("Save", ButtonBar.ButtonData.OK_DONE);
+    @FXML
+    private void loadTenantsView() {
+        switchView("admin_tenants.fxml", btnTenants);
+    }
+
+    @FXML
+    private void loadRoomsView() {
+        switchView("admin_rooms.fxml", btnRooms);
+    }
+
+    @FXML
+    private void loadLeasesView() {
+        switchView("admin_leases.fxml", btnLeases);
+    }
+
+    @FXML
+    private void loadPaymentsView() {
+        switchView("admin_payments.fxml", btnPayments);
+    }
+
+    @FXML
+    public void loadMaintenanceView() {
+        switchView("admin_maintenance.fxml", btnMaintenance);
+    }
+
+    @FXML
+    private void handleLogout() {
+        try {
+            SessionManager.logout(); // Clears user session data safely
+            App.setRoot("login");
+        } catch (IOException e) {
+            System.err.println("Failed to navigate to login");
+            e.printStackTrace();
+        }
+    }
+
+    @FXML
+    public void LoadAccountView() {
+        setActiveButton(btnAccount);
+
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("Edit Account Settings");
+        dialog.setHeaderText("Update your credentials below.\nNote: Current password is required to save changes.");
+        ButtonType saveButtonType = new ButtonType("Save Changes", ButtonBar.ButtonData.OK_DONE);
         dialog.getDialogPane().getButtonTypes().addAll(saveButtonType, ButtonType.CANCEL);
-
+        
         GridPane grid = new GridPane();
         grid.setHgap(10);
-        grid.setVgap(10);
+        grid.setVgap(15);
         grid.setPadding(new Insets(20, 150, 10, 10));
+        
+        PasswordField newPasswordField = new PasswordField();
+        newPasswordField.setPromptText("New Password");
 
-        TextField roomNumField = new TextField();
-        roomNumField.setPromptText("e.g. 101A");
-        TextField floorField = new TextField();
-        floorField.setPromptText("Floor Number");
-        ComboBox<String> typeBox = new ComboBox<>(FXCollections.observableArrayList("Single", "Double", "Dormitory"));
-        typeBox.setValue("Single");
-        TextField capacityField = new TextField();
-        capacityField.setPromptText("Capacity");
-        TextField priceField = new TextField();
-        priceField.setPromptText("Monthly Price");
+        TextField usernameField = new TextField();
+        usernameField.setPromptText("New Username (Optional)");
 
-        grid.add(new Label("Room Number:"), 0, 0);
-        grid.add(roomNumField, 1, 0);
-        grid.add(new Label("Floor:"), 0, 1);
-        grid.add(floorField, 1, 1);
-        grid.add(new Label("Room Type:"), 0, 2);
-        grid.add(typeBox, 1, 2);
-        grid.add(new Label("Capacity:"), 0, 3);
-        grid.add(capacityField, 1, 3);
-        grid.add(new Label("Price:"), 0, 4);
-        grid.add(priceField, 1, 4);
+        PasswordField currentPasswordField = new PasswordField();
+        currentPasswordField.setPromptText("Required to save changes");
+        
+        // Reordered layout alignment
+        grid.add(new Label("New Password:"), 0, 0);
+        grid.add(newPasswordField, 1, 0);
 
+        grid.add(new Label("New Username (Optional):"), 0, 1);
+        grid.add(usernameField, 1, 1);
+
+        grid.add(new Label("Current Password * :"), 0, 2);
+        grid.add(currentPasswordField, 1, 2);
+        
         dialog.getDialogPane().setContent(grid);
+        
+        dialog.showAndWait().ifPresent(response -> {
+            if (response == saveButtonType) {
+                processAccountUpdate(
+                        usernameField.getText().trim(),
+                        currentPasswordField.getText(),
+                        newPasswordField.getText());
+            }
+        });
+    }
 
-        dialog.setResultConverter(dialogButton -> {
-            if (dialogButton == saveButtonType) {
-                try {
-                    Room newRoom = new Room();
-                    newRoom.SetRoomNumber(roomNumField.getText());
-                    newRoom.SetFloor(Integer.parseInt(floorField.getText()));
-                    newRoom.SetRoomType(typeBox.getValue());
-                    newRoom.SetCapacity(Integer.parseInt(capacityField.getText()));
-                    newRoom.SetPrice(Double.parseDouble(priceField.getText()));
-                    newRoom.SetCurrentOccupancy(0);
+    private void processAccountUpdate(String newUser, String currentPass, String newPass) {
+    int userId = SessionManager.getCurrentUserId();
+    
+    if (currentPass.isEmpty()) {
+        showAlert(Alert.AlertType.WARNING, "Security Requirement", "You must enter your current password to save changes.");
+        return;
+    }
+    
+    if (newUser.isEmpty() && newPass.isEmpty()) {
+        showAlert(Alert.AlertType.INFORMATION, "No Changes", "No new credentials were typed.");
+        return;
+    }
 
-                    // If your Room object has these UI fields, set them here
-                    // newRoom.setStatus("Available");
-                    // newRoom.setMaintenance("None");
-
-                    return newRoom;
-                } catch (NumberFormatException e) {
-                    new Alert(Alert.AlertType.ERROR, "Floor, Capacity, and Price must be valid numbers.").show();
-                    return null;
+    String verifySql = "SELECT password_hash, username FROM USER_ACCOUNT WHERE user_id = ?";
+    
+    try (Connection conn = ConnectionManager.getConnection();
+         PreparedStatement verifyPs = conn.prepareStatement(verifySql)) {
+        
+        verifyPs.setInt(1, userId);
+        try (ResultSet rs = verifyPs.executeQuery()) {
+            if (rs.next()) {
+                String dbPasswordHash = rs.getString("password_hash");
+                String currentUsername = rs.getString("username");
+                
+                // Hash the user's plain-text input to compare against the DB hash
+                String hashedCurrentInput = PasswordUtil.hash(currentPass);
+                
+                if (dbPasswordHash.equals(hashedCurrentInput)) {
+                    
+                    String finalUsername = newUser.isEmpty() ? currentUsername : newUser;
+                    
+                    // Hash the new password if provided; otherwise, keep the existing hash
+                    String finalPassword = newPass.isEmpty() ? dbPasswordHash : PasswordUtil.hash(newPass);
+                    
+                    String updateSql = "UPDATE USER_ACCOUNT SET username = ?, password_hash = ? WHERE user_id = ?";
+                    try (PreparedStatement updatePs = conn.prepareStatement(updateSql)) {
+                        updatePs.setString(1, finalUsername);
+                        updatePs.setString(2, finalPassword);
+                        updatePs.setInt(3, userId);
+                        
+                        int affectedRows = updatePs.executeUpdate();
+                        if (affectedRows > 0) {
+                            showAlert(Alert.AlertType.INFORMATION, "Success", "Account credentials updated successfully!");
+                        }
+                    }
+                } else {
+                    showAlert(Alert.AlertType.ERROR, "Security Error", "The current password you entered is incorrect.");
                 }
             }
-            return null;
-        });
-
-        Optional<Room> result = dialog.showAndWait();
-        result.ifPresent(room -> {
-            if (roomDao != null) {
-                // Use PascalCase for DAO Create method
-                roomDao.Create(room);
-                loadTableData(); // Refresh the table from the DB to get the auto-generated ID
-            } else {
-                roomList.add(room); // Fallback if DAO isn't connected yet
-            }
-        });
+        }
+    } catch (SQLException e) {
+        showAlert(Alert.AlertType.ERROR, "Database Error", "An error occurred while updating the account.");
+        e.printStackTrace();
     }
+}
 
-    @FXML
-    public void switchToLeases() throws IOException {
-        App.setRoot("admin_leases");
-    }
-
-    @FXML
-    public void switchToTenants() throws IOException {
-        App.setRoot("admin_tenants");
+    private void showAlert(Alert.AlertType type, String title, String content) {
+        Alert alert = new Alert(type);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(content);
+        alert.showAndWait();
     }
 }

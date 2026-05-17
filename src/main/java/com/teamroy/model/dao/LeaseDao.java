@@ -1,19 +1,21 @@
 package com.teamroy.model.dao;
-
 import com.teamroy.model.entity.Lease;
 import java.time.LocalDate;
 import java.util.List;
-
 public interface LeaseDao extends GenericDao<Lease> {
-    List<Lease> GetByTenantID(int tenantId);
+    List<Lease> GetByTenantId(int tenantId);
 
-    List<Lease> GetActiveLeasesByRoom(int roomId);
+    Lease GetActiveLeaseByTenant(int tenantId);
 
+    double GetTotalBalanceByTenant(int tenantId);
+
+    Lease GetActiveLeaseByRoom(int roomId);
     List<Lease> GetByStatus(String status);
-
     List<Lease> GetExpiringSoon(LocalDate endDateThreshold);
-
     boolean UpdateStatus(int leaseId, String status);
-
-    boolean IsRoomAvailable(int roomId, LocalDate start, LocalDate end);
+    boolean IsRoomAvailable(int roomId, LocalDate start, LocalDate end, Integer excludeLeaseId);
+    default boolean IsRoomAvailable(int roomId, LocalDate start, LocalDate end) {
+        return IsRoomAvailable(roomId, start, end, null);
+    }
+    boolean IsRoomAvailableWithCapacity(int roomId, LocalDate start, LocalDate end, Integer excludeLeaseId, int capacity);
 }

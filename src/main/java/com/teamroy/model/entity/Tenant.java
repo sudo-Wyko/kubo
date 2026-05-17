@@ -9,21 +9,18 @@ public class Tenant {
     private String lastName;
     private String contactNumber;
     private String email;
-    private double totalBalance;
     private Timestamp deletedAt;
 
     public Tenant() {
     }
 
-    public Tenant(String firstName, String lastName, String contactNumber, String email, double totalBalance) {
+    public Tenant(String firstName, String lastName, String contactNumber, String email) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.contactNumber = contactNumber;
         this.email = email;
-        this.totalBalance = totalBalance;
     }
 
-    // -- Getters --
     public int GetTenantID() {
         return tenantId;
     }
@@ -48,15 +45,10 @@ public class Tenant {
         return email;
     }
 
-    public double GetTotalBalance() {
-        return totalBalance;
-    }
-
     public Timestamp GetTimeDeletedAt() {
         return deletedAt;
     }
 
-    // -- Setters --
     public void SetTenantID(int tenantId) {
         this.tenantId = tenantId;
     }
@@ -81,12 +73,7 @@ public class Tenant {
         this.email = email;
     }
 
-    public void SetTotalBalance(double totalBalance) {
-        this.totalBalance = totalBalance;
-    }
-
     public void SetTimeDeletedAt(Timestamp deletedAt) {
         this.deletedAt = deletedAt;
     }
-
 }

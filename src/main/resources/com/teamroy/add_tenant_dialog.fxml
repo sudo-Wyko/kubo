@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<VBox xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.teamroy.controller.AddTenantDialogController"
+      spacing="12" prefWidth="420"
+      styleClass="content-view dialog-root card">
+    <padding><Insets top="20" right="24" bottom="20" left="24"/></padding>
+    <Label fx:id="titleLabel" text="Add tenant" styleClass="dialog-title"/>
+    <Label text="First name *"/>
+    <TextField fx:id="firstNameField" styleClass="form-control"/>
+    <Label text="Last name *"/>
+    <TextField fx:id="lastNameField" styleClass="form-control"/>
+    <Label text="Contact number *"/>
+    <TextField fx:id="contactField" styleClass="form-control"/>
+    <Label text="Email"/>
+    <TextField fx:id="emailField" styleClass="form-control"/>
+    <Separator/>
+    <Label text="Username (creates tenant login)" style="-fx-text-fill: #94a3b8;"/>
+    <TextField fx:id="usernameField" promptText="Optional" styleClass="form-control"/>
+    <Label text="Temporary password"/>
+    <PasswordField fx:id="passwordField" promptText="Required if username is set" styleClass="form-control"/>
+    <Label fx:id="errorLabel" managed="false" visible="false" wrapText="true" styleClass="error-label"/>
+    <HBox spacing="12" alignment="CENTER_RIGHT">
+        <Button text="Cancel" onAction="#cancel" styleClass="secondary-button"/>
+        <Button fx:id="saveButton" text="Save" onAction="#save"
+                styleClass="primary-button"/>
+    </HBox>
+</VBox>

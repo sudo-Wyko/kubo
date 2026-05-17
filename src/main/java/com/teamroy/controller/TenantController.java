@@ -7,11 +7,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
-
 import com.teamroy.App;
-import com.teamroy.DatabaseUtility;
+import com.teamroy.ConnectionManager;
 import com.teamroy.SessionManager;
-
+import com.teamroy.PasswordUtil;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
@@ -28,12 +27,11 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
 
 public class TenantController {
-    private Connection conn = DatabaseUtility.getConnection();
+    private Connection conn = ConnectionManager.getConnection();
     private static TenantController instance;
 
     @FXML
     private StackPane contentArea;
-
     @FXML
     private Button btnHome;
     @FXML
@@ -44,41 +42,39 @@ public class TenantController {
     private Button btnLease;
     @FXML
     private Button btnMaintenance;
+    @FXML
+    private Button btnAccount; // Linked to your Edit Account button layout
 
-    private void SetActiveButton(Button activeButton) {
-        List<Button> allButtons = Arrays.asList(btnHome, btnRooms, btnPayments, btnLease, btnMaintenance);
+    private static final String ACTIVE_CLASS = "nav-button-active";
 
-        for (Button btn : allButtons) {
-            if (btn != null) {
-                btn.getStyleClass().remove("nav-button-active");
-                if (!btn.getStyleClass().contains("nav-button"))
-                    btn.getStyleClass().add("nav-button");
-            }
-        }
-
-        if (activeButton != null) {
-            activeButton.getStyleClass().remove("nav-button");
-            if (!activeButton.getStyleClass().contains("nav-button-active"))
-                activeButton.getStyleClass().add("nav-button-active");
-        }
-    }
-
+    @FXML
     public void initialize() {
         instance = this;
         SwitchView("tenant_home.fxml", btnHome);
     }
 
-    // --- View Switcher Logic ---
+    // Cleaned up selection logic matching the Admin Controller
+    private void SetActiveButton(Button activeButton) {
+        List<Button> allButtons = Arrays.asList(btnHome, btnRooms, btnPayments, btnLease, btnMaintenance, btnAccount);
+        for (Button btn : allButtons) {
+            if (btn != null) {
+                btn.getStyleClass().remove(ACTIVE_CLASS);
+            }
+        }
+        if (activeButton != null) {
+            if (!activeButton.getStyleClass().contains(ACTIVE_CLASS)) {
+                activeButton.getStyleClass().add(ACTIVE_CLASS);
+            }
+        }
+    }
+
     private void SwitchView(String fxmlFileName, Button targetButton) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/teamroy/" + fxmlFileName));
             Parent view = loader.load();
-
             contentArea.getChildren().clear();
             contentArea.getChildren().add(view);
-
             SetActiveButton(targetButton);
-
         } catch (IOException e) {
             System.err.println("Could not load view: " + fxmlFileName);
             e.printStackTrace();
@@ -101,56 +97,6 @@ public class TenantController {
         }
     }
 
-    private void processAccountUpdate(String newUser, String currentPass, String newPass) {
-        int userId = SessionManager.getCurrentUserId();
-
-        if (newUser.isEmpty() || currentPass.isEmpty() || newPass.isEmpty()) {
-            showAlert(Alert.AlertType.WARNING, "Form Incomplete", "Please fill in all fields.");
-            return;
-        }
-
-        String verifySql = "SELECT password_hash FROM USER_ACCOUNT WHERE user_id = ?";
-        String updateSql = "UPDATE USER_ACCOUNT SET username = ?, password_hash = ? WHERE user_id = ?";
-
-        try (PreparedStatement verifyPs = conn.prepareStatement(verifySql)) {
-            verifyPs.setInt(1, userId);
-            ResultSet rs = verifyPs.executeQuery();
-
-            if (rs.next()) {
-                String dbPasswordHash = rs.getString("password_hash");
-
-                if (dbPasswordHash.equals(currentPass)) {
-                    try (PreparedStatement updatePs = conn.prepareStatement(updateSql)) {
-                        updatePs.setString(1, newUser);
-                        updatePs.setString(2, newPass);
-                        updatePs.setInt(3, userId);
-
-                        int affectedRows = updatePs.executeUpdate();
-                        if (affectedRows > 0) {
-                            showAlert(Alert.AlertType.INFORMATION, "Success",
-                                    "Account credentials updated successfully!");
-                        }
-                    }
-                } else {
-                    showAlert(Alert.AlertType.ERROR, "Security Error",
-                            "The current password you entered is incorrect.");
-                }
-            }
-        } catch (SQLException e) {
-            showAlert(Alert.AlertType.ERROR, "Database Error", "An error occurred while updating the account.");
-            e.printStackTrace();
-        }
-    }
-
-    private void showAlert(Alert.AlertType type, String title, String content) {
-        Alert alert = new Alert(type);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(content);
-        alert.showAndWait();
-    }
-
-    // --- Button Click Handlers ---
 
     @FXML
     public void LoadHomeView() {
@@ -177,43 +123,115 @@ public class TenantController {
         SwitchView("tenant_maintenance.fxml", btnMaintenance);
     }
 
+
     @FXML
-    public void LoadAccountView() {
+    private void LoadAccountView() {
+        SetActiveButton(btnAccount);
+
         Dialog<ButtonType> dialog = new Dialog<>();
         dialog.setTitle("Edit Account Settings");
-        dialog.setHeaderText("Update your credentials below.");
-
+        dialog.setHeaderText("Update your admin credentials below.\nNote: Current password is required to save changes.");
         ButtonType saveButtonType = new ButtonType("Save Changes", ButtonBar.ButtonData.OK_DONE);
         dialog.getDialogPane().getButtonTypes().addAll(saveButtonType, ButtonType.CANCEL);
-
+        
         GridPane grid = new GridPane();
         grid.setHgap(10);
         grid.setVgap(15);
         grid.setPadding(new Insets(20, 150, 10, 10));
-
-        TextField usernameField = new TextField();
-        usernameField.setPromptText("New Username");
-        PasswordField currentPasswordField = new PasswordField();
-        currentPasswordField.setPromptText("Current Password");
+        
         PasswordField newPasswordField = new PasswordField();
         newPasswordField.setPromptText("New Password");
 
-        grid.add(new Label("New Username:"), 0, 0);
-        grid.add(usernameField, 1, 0);
-        grid.add(new Label("Current Password:"), 0, 1);
-        grid.add(currentPasswordField, 1, 1);
-        grid.add(new Label("New Password:"), 0, 2);
-        grid.add(newPasswordField, 1, 2);
+        TextField usernameField = new TextField();
+        usernameField.setPromptText("New Username (Optional)");
 
+        PasswordField currentPasswordField = new PasswordField();
+        currentPasswordField.setPromptText("Required to save changes");
+        
+        // Reordered: New Password -> New Username -> Current Password
+        grid.add(new Label("New Password:"), 0, 0);
+        grid.add(newPasswordField, 1, 0);
+
+        grid.add(new Label("New Username (Optional):"), 0, 1);
+        grid.add(usernameField, 1, 1);
+
+        grid.add(new Label("Current Password * :"), 0, 2);
+        grid.add(currentPasswordField, 1, 2);
+        
         dialog.getDialogPane().setContent(grid);
-
+        
         dialog.showAndWait().ifPresent(response -> {
             if (response == saveButtonType) {
                 processAccountUpdate(
-                        usernameField.getText(),
+                        usernameField.getText().trim(),
                         currentPasswordField.getText(),
                         newPasswordField.getText());
             }
         });
+    }
+
+    private void processAccountUpdate(String newUser, String currentPass, String newPass) {
+    int userId = SessionManager.getCurrentUserId();
+    
+    if (currentPass.isEmpty()) {
+        showAlert(Alert.AlertType.WARNING, "Security Requirement", "You must enter your current password to save changes.");
+        return;
+    }
+    
+    if (newUser.isEmpty() && newPass.isEmpty()) {
+        showAlert(Alert.AlertType.INFORMATION, "No Changes", "No new credentials were typed.");
+        return;
+    }
+
+    String verifySql = "SELECT password_hash, username FROM USER_ACCOUNT WHERE user_id = ?";
+    
+    try (Connection conn = ConnectionManager.getConnection();
+         PreparedStatement verifyPs = conn.prepareStatement(verifySql)) {
+        
+        verifyPs.setInt(1, userId);
+        try (ResultSet rs = verifyPs.executeQuery()) {
+            if (rs.next()) {
+                String dbPasswordHash = rs.getString("password_hash");
+                String currentUsername = rs.getString("username");
+                
+                // Hash the user's plain-text input to compare against the DB hash
+                String hashedCurrentInput = PasswordUtil.hash(currentPass);
+                
+                if (dbPasswordHash.equals(hashedCurrentInput)) {
+                    
+                    String finalUsername = newUser.isEmpty() ? currentUsername : newUser;
+                    
+                    // Hash the new password if provided; otherwise, keep the existing hash
+                    String finalPassword = newPass.isEmpty() ? dbPasswordHash : PasswordUtil.hash(newPass);
+                    
+                    String updateSql = "UPDATE USER_ACCOUNT SET username = ?, password_hash = ? WHERE user_id = ?";
+                    try (PreparedStatement updatePs = conn.prepareStatement(updateSql)) {
+                        updatePs.setString(1, finalUsername);
+                        updatePs.setString(2, finalPassword);
+                        updatePs.setInt(3, userId);
+                        
+                        int affectedRows = updatePs.executeUpdate();
+                        if (affectedRows > 0) {
+                            showAlert(Alert.AlertType.INFORMATION, "Success", "Account credentials updated successfully!");
+                        }
+                    }
+                } else {
+                    showAlert(Alert.AlertType.ERROR, "Security Error", "The current password you entered is incorrect.");
+                }
+            }
+        }
+    } catch (SQLException e) {
+        showAlert(Alert.AlertType.ERROR, "Database Error", "An error occurred while updating the account.");
+        e.printStackTrace();
+    }
+}
+
+
+    private void showAlert(Alert.AlertType type, String title, String content) {
+        Alert alert = new Alert(type);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(content);
+        alert.showAndWait();
     }
 }

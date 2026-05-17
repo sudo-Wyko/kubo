@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.teamroy.controller.AddChargeDialogController"
+      spacing="12" prefWidth="440"
+      styleClass="content-view dialog-root card">
+    <padding>
+        <Insets top="20" right="24" bottom="20" left="24"/>
+    </padding>
+
+    <Label text="Add Charge" styleClass="dialog-title"/>
+    <Label text="Adds a charge to the selected lease. Lease balance updates automatically."
+           wrapText="true" styleClass="card-subtitle"/>
+
+    <VBox spacing="6">
+        <Label text="Lease"/>
+        <ComboBox fx:id="leaseCombo" maxWidth="Infinity" styleClass="form-control"/>
+    </VBox>
+
+    <VBox spacing="6">
+        <Label text="Charge type"/>
+        <ComboBox fx:id="typeCombo" maxWidth="Infinity" styleClass="form-control"/>
+    </VBox>
+
+    <VBox spacing="6">
+        <Label text="Amount"/>
+        <TextField fx:id="amountField" promptText="0.00" styleClass="form-control"/>
+    </VBox>
+
+    <VBox spacing="6">
+        <Label text="Due date"/>
+        <DatePicker fx:id="dueDatePicker" maxWidth="Infinity" styleClass="form-control"/>
+    </VBox>
+
+    <VBox spacing="6">
+        <Label text="Description"/>
+        <TextField fx:id="descriptionField" promptText="Optional" styleClass="form-control"/>
+    </VBox>
+
+    <Label fx:id="errorLabel" styleClass="error-label" wrapText="true" visible="false" managed="false"/>
+
+    <HBox spacing="12" alignment="CENTER_RIGHT">
+        <Button text="Cancel" onAction="#cancel" styleClass="secondary-button"/>
+        <Button fx:id="saveButton" text="Issue charge" onAction="#confirm" styleClass="primary-button"/>
+    </HBox>
+</VBox>

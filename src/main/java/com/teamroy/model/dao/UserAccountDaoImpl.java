@@ -3,14 +3,11 @@ package com.teamroy.model.dao;
 import com.teamroy.model.entity.UserAccount;
 import java.util.*;
 import java.sql.*;
-
 public class UserAccountDaoImpl implements UserAccountDao {
     private Connection conn;
-
     public UserAccountDaoImpl(Connection conn) {
         this.conn = conn;
     }
-
     @Override
     public void Create(UserAccount entity) {
         String sql = "INSERT INTO USER_ACCOUNT (username, password_hash, role) VALUES (?, ?, ?)";
@@ -19,18 +16,17 @@ public class UserAccountDaoImpl implements UserAccountDao {
             ps.setString(2, entity.GetPassword());
             ps.setString(3, entity.GetRole());
             ps.executeUpdate();
-
-            // Get the auto-incremented ID and set it back to the entity
             try (ResultSet generatedKeys = ps.getGeneratedKeys()) {
                 if (generatedKeys.next()) {
                     entity.SetUserID(generatedKeys.getInt(1));
+                } else {
+                    throw new DaoException("User account insert succeeded but no generated key was returned.");
                 }
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw new DaoException("Could not create user account: " + e.getMessage(), e);
         }
     }
-
     @Override
     public UserAccount GetByID(int userId) {
         String sql = "SELECT * FROM USER_ACCOUNT WHERE user_id = ?";
@@ -46,7 +42,6 @@ public class UserAccountDaoImpl implements UserAccountDao {
         }
         return null;
     }
-
     @Override
     public List<UserAccount> GetAll() {
         List<UserAccount> users = new ArrayList<>();
@@ -61,7 +56,6 @@ public class UserAccountDaoImpl implements UserAccountDao {
         }
         return users;
     }
-
     @Override
     public UserAccount GetByUsername(String username) {
         String sql = "SELECT * FROM USER_ACCOUNT WHERE username = ?";
@@ -77,7 +71,6 @@ public class UserAccountDaoImpl implements UserAccountDao {
         }
         return null;
     }
-
     @Override
     public boolean UpdatePassword(int userId, String newPasswordHash) {
         String sql = "UPDATE USER_ACCOUNT SET password_hash = ? WHERE user_id = ?";
@@ -90,7 +83,6 @@ public class UserAccountDaoImpl implements UserAccountDao {
             return false;
         }
     }
-
     @Override
     public void Update(UserAccount user) {
         String sql = "UPDATE USER_ACCOUNT SET username = ?, role = ? WHERE user_id = ?";
@@ -103,7 +95,6 @@ public class UserAccountDaoImpl implements UserAccountDao {
             e.printStackTrace();
         }
     }
-
     @Override
     public void Delete(int userId) {
         String sql = "DELETE FROM USER_ACCOUNT WHERE user_id = ?";
@@ -114,8 +105,6 @@ public class UserAccountDaoImpl implements UserAccountDao {
             e.printStackTrace();
         }
     }
-
-    // -- Helper Method --
     private UserAccount ResultSetToUser(ResultSet rs) throws SQLException {
         UserAccount user = new UserAccount();
         user.SetUserID(rs.getInt("user_id"));
@@ -124,5 +113,4 @@ public class UserAccountDaoImpl implements UserAccountDao {
         user.SetRole(rs.getString("role"));
         return user;
     }
-
 }

@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.teamroy.controller.AddPaymentDialogController"
+      spacing="12" prefWidth="420"
+      styleClass="content-view dialog-root card">
+    <padding>
+        <Insets top="20" right="24" bottom="20" left="24"/>
+    </padding>
+
+    <Label text="Record payment" styleClass="dialog-title"/>
+
+    <VBox spacing="6">
+        <Label text="Lease"/>
+        <ComboBox fx:id="leaseCombo" maxWidth="Infinity" styleClass="form-control"/>
+        <Label fx:id="leaseLockedLabel" visible="false" managed="false"
+               styleClass="card-title"/>
+    </VBox>
+
+    <VBox spacing="6">
+        <Label text="Amount"/>
+        <TextField fx:id="amountField" promptText="0.00" styleClass="form-control"/>
+        <Label fx:id="amountErrorLabel" styleClass="error-label" wrapText="true"/>
+    </VBox>
+
+    <VBox spacing="6">
+        <Label text="Payment date"/>
+        <DatePicker fx:id="paymentDatePicker" maxWidth="Infinity" styleClass="form-control"/>
+    </VBox>
+
+    <VBox spacing="6">
+        <Label text="Method"/>
+        <ComboBox fx:id="methodCombo" maxWidth="Infinity" styleClass="form-control"/>
+    </VBox>
+
+    <VBox spacing="6">
+        <Label text="Status"/>
+        <ComboBox fx:id="statusCombo" maxWidth="Infinity" styleClass="form-control"/>
+        <Label fx:id="statusLockedLabel" visible="false" managed="false"/>
+    </VBox>
+
+    <HBox spacing="12" alignment="CENTER_RIGHT">
+        <Button text="Cancel" onAction="#cancel" styleClass="secondary-button"/>
+        <Button fx:id="saveButton" text="Save" onAction="#confirm"
+                styleClass="primary-button"/>
+    </HBox>
+</VBox>

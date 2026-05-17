@@ -1,292 +1,538 @@
 package com.teamroy.controller;
-
-import com.teamroy.App;
-import com.teamroy.DatabaseUtility;
-import com.teamroy.model.dao.*;
-import com.teamroy.model.entity.*;
-import java.io.IOException;
-import java.sql.Connection;
-import java.util.List;
-import java.util.Optional;
-
-import javafx.beans.property.SimpleStringProperty;
+import com.teamroy.CurrencyUtil;
+import com.teamroy.ConnectionManager;
+import com.teamroy.ExportFileNames;
+import com.teamroy.model.dao.DaoException;
+import com.teamroy.model.dao.LeaseDaoImpl;
+import com.teamroy.model.dao.MaintenanceRequestDaoImpl;
+import com.teamroy.model.dao.RoomDaoImpl;
+import com.teamroy.model.dao.TenantDaoImpl;
+import com.teamroy.model.entity.Lease;
+import com.teamroy.model.entity.Room;
+import com.teamroy.model.entity.Tenant;
+import com.teamroy.service.ImportExportService;
+import javafx.animation.PauseTransition;
+import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.collections.transformation.FilteredList;
-import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
-import javafx.scene.control.*;
-import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.layout.GridPane;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
+import javafx.scene.control.SplitPane;
+import javafx.scene.control.ToggleButton;
+import javafx.scene.control.Alert;
 import javafx.scene.layout.VBox;
-import javafx.geometry.Insets;
-
+import javafx.stage.FileChooser;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
+import javafx.util.Duration;
+import java.io.File;
+import java.sql.Connection;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 public class AdminTenantController {
-
+    private static final DateTimeFormatter MDFMT = DateTimeFormatter.ofPattern("MM/dd");
     @FXML
     private TextField searchField;
     @FXML
-    private ComboBox<String> filterStatus;
-
-    // Table elements
+    private ComboBox<Room> roomFilterCombo;
+    @FXML
+    private ComboBox<String> statusFilterCombo;
     @FXML
     private TableView<Tenant> tenantTable;
     @FXML
-    private TableColumn<Tenant, Integer> colTenantId;
+    private TableColumn<Tenant, String> colAvatar;
     @FXML
-    private TableColumn<Tenant, String> colFullName;
+    private TableColumn<Tenant, String> colName;
     @FXML
     private TableColumn<Tenant, String> colRoom;
     @FXML
-    private TableColumn<Tenant, String> colStatus;
-
-    // Side Panel elements
+    private TableColumn<Tenant, String> colLeaseStart;
     @FXML
-    private VBox sidePanel;
+    private TableColumn<Tenant, String> colLeaseEnd;
+    @FXML
+    private TableColumn<Tenant, String> colRentStatus;
+    @FXML
+    private TableColumn<Tenant, String> colReqCount;
+    @FXML
+    private Label detailInitials;
     @FXML
     private Label detailName;
     @FXML
-    private Label detailStatus;
-    @FXML
     private Label detailEmail;
     @FXML
-    private Label detailPhone;
+    private Label detailContact;
     @FXML
-    private Label detailRoom;
+    private Label detailAddedDate;
     @FXML
     private Label detailBalance;
     @FXML
-    private Label detailLeaseEnd;
-
-    private ObservableList<Tenant> tenantList;
-    private FilteredList<Tenant> filteredData;
-
-    // DAOs
-    private TenantDao tenantDao;
-    private LeaseDao leaseDao;
-    private RoomDao roomDao;
-
+    private Label detailRentStatus;
     @FXML
-    public void initialize() {
-        // 1. Initialize DAOs (Assuming you have a DatabaseConnection utility class)
-        Connection conn = DatabaseUtility.getConnection();
-
-        // 3. It's always best practice to check if the connection was successful!
-        if (conn != null) {
+    private Label detailNextDue;
+    @FXML
+    private Label detailRoomNumber;
+    @FXML
+    private Label detailRoomType;
+    @FXML
+    private Label detailLeaseStatus;
+    @FXML
+    private SplitPane tenantSplitPane;
+    @FXML
+    private javafx.scene.control.ScrollPane detailScrollPane;
+    @FXML
+    private VBox detailPanel;
+    @FXML
+    private ToggleButton archivedToggle;
+    @FXML
+    private TableView<Tenant> archivedTable;
+    @FXML
+    private TableColumn<Tenant, String> archColName;
+    @FXML
+    private TableColumn<Tenant, String> archColEmail;
+    @FXML
+    private TableColumn<Tenant, Void> archActions;
+    private Connection conn;
+    private TenantDaoImpl tenantDao;
+    private LeaseDaoImpl leaseDao;
+    private RoomDaoImpl roomDao;
+    private MaintenanceRequestDaoImpl maintenanceDao;
+    private final ImportExportService importExportService = new ImportExportService();
+    private PauseTransition searchPause;
+    private Room sentinelAllRooms() {
+        Room r = new Room();
+        r.SetRoomID(-1);
+        r.SetRoomNumber("All rooms");
+        return r;
+    }
+    @FXML
+    private void initialize() {
+        try {
+            conn = ConnectionManager.getConnection();
             tenantDao = new TenantDaoImpl(conn);
             leaseDao = new LeaseDaoImpl(conn);
             roomDao = new RoomDaoImpl(conn);
-
-            // 4. Load your data from the DB now that the DAOs are ready
-            // loadTenantData();
-        } else {
-            System.err.println("Error: Database connection is null in AdminTenantController.");
+            maintenanceDao = new MaintenanceRequestDaoImpl(conn);
+        } catch (Exception ex) {
+            System.err.println("Failed to initialize tenants view: " + ex.getMessage());
+            ex.printStackTrace();
+            return;
         }
-
-        filterStatus.setItems(FXCollections.observableArrayList("All Statuses", "Active", "Former"));
-        filterStatus.setValue("All Statuses");
-
-        // 2. Map Columns to Entity Properties
-        colTenantId.setCellValueFactory(new PropertyValueFactory<>("tenantId"));
-
-        // Custom mapping to combine First and Last Name
-        colFullName.setCellValueFactory(cellData -> {
-            Tenant t = cellData.getValue();
-            return new SimpleStringProperty(t.GetFirstName() + " " + t.GetLastName());
+        roomFilterCombo.getItems().add(sentinelAllRooms());
+        roomFilterCombo.getItems().addAll(roomDao.GetAll());
+        roomFilterCombo.getSelectionModel().selectFirst();
+        bindRoomCells();
+        statusFilterCombo.setItems(FXCollections.observableArrayList("ALL", "PAID", "UNPAID"));
+        statusFilterCombo.getSelectionModel().selectFirst();
+        configureTenantColumns();
+        configureArchivedColumns();
+        searchPause = new PauseTransition(Duration.millis(300));
+        searchPause.setOnFinished(ev -> reloadMainTable());
+        searchField.textProperty().addListener((obs, oldVal, newVal) -> {
+            searchPause.stop();
+            searchPause.playFromStart();
         });
-
-        // Custom mapping to fetch the Room Number via LeaseDao & RoomDao
-        colRoom.setCellValueFactory(cellData -> {
-            Lease activeLease = getActiveLeaseForTenant(cellData.getValue().GetTenantID());
-            if (activeLease != null) {
-                Room room = roomDao.GetByID(activeLease.GetRoomID());
-                return new SimpleStringProperty(room != null ? room.GetRoomNumber() : "N/A");
-            }
-            return new SimpleStringProperty("Unassigned");
-        });
-
-        // Custom mapping to determine Status based on Lease
-        colStatus.setCellValueFactory(cellData -> {
-            Lease activeLease = getActiveLeaseForTenant(cellData.getValue().GetTenantID());
-            return new SimpleStringProperty(activeLease != null ? "Active" : "Former");
-        });
-
-        tenantTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-
-        // 3. Load actual data from Database
-        loadTableData();
-
-        setupSearchAndFilter();
-        setupTableSelection();
-    }
-
-    private void loadTableData() {
-        // Fetch from Database instead of dummy data
-        List<Tenant> dbTenants = tenantDao.GetAll();
-        tenantList = FXCollections.observableArrayList(dbTenants);
-        if (filteredData != null) {
-            // If refreshing after an add, update the filtered list wrapper
-            filteredData = new FilteredList<>(tenantList, b -> true);
-            setupSearchAndFilter();
-        }
-    }
-
-    private void setupTableSelection() {
-        tenantTable.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
-            if (newValue != null) {
-                showTenantDetails(newValue);
+        roomFilterCombo.getSelectionModel().selectedItemProperty().addListener((obs, o, n) -> reloadMainTable());
+        statusFilterCombo.getSelectionModel().selectedItemProperty().addListener((obs, o, n) -> reloadMainTable());
+        tenantTable.getSelectionModel().selectedItemProperty().addListener((obs, o, n) -> onTenantSelected(n));
+        hideDetailPanel();
+        archivedToggle.selectedProperty().addListener((obs, o, shown) -> {
+            archivedTable.setVisible(shown);
+            archivedTable.setManaged(shown);
+            if (Boolean.TRUE.equals(shown)) {
+                reloadArchivedTable();
             }
         });
+        reloadMainTable();
     }
-
-    private void showTenantDetails(Tenant tenant) {
-        detailName.setText(tenant.GetFirstName() + " " + tenant.GetLastName());
-        detailEmail.setText("✉ " + tenant.GetEmail());
-        detailPhone.setText("📞 " + tenant.GetContactNumber());
-        detailBalance.setText("₱" + String.format("%.2f", tenant.GetTotalBalance()));
-
-        // Fetch Lease info dynamically
-        Lease activeLease = getActiveLeaseForTenant(tenant.GetTenantID());
-
-        if (activeLease != null) {
-            Room room = roomDao.GetByID(activeLease.GetRoomID());
-            detailRoom.setText(room != null ? room.GetRoomNumber() : "N/A");
-            detailLeaseEnd.setText(activeLease.GetEndDate().toString());
-
-            detailStatus.setText("ACTIVE");
-            detailStatus.setStyle(
-                    "-fx-background-color: #dcfce7; -fx-text-fill: #166534; -fx-padding: 3 10; -fx-background-radius: 15; -fx-font-size: 11px; -fx-font-weight: bold;");
-        } else {
-            detailRoom.setText("N/A");
-            detailLeaseEnd.setText("Expired/None");
-
-            detailStatus.setText("FORMER");
-            detailStatus.setStyle(
-                    "-fx-background-color: #f1f5f9; -fx-text-fill: #475569; -fx-padding: 3 10; -fx-background-radius: 15; -fx-font-size: 11px; -fx-font-weight: bold;");
-        }
-
-        sidePanel.setVisible(true);
-        sidePanel.setManaged(true);
-    }
-
-    // Helper method using our LeaseDao to find if they are currently renting
-    private Lease getActiveLeaseForTenant(int tenantId) {
-        List<Lease> leases = leaseDao.GetByTenantID(tenantId);
-        for (Lease lease : leases) {
-            if ("ACTIVE".equalsIgnoreCase(lease.GetStatus())) {
-                return lease;
-            }
-        }
-        return null;
-    }
-
-    @FXML
-    public void closeSidePanel() {
-        sidePanel.setVisible(false);
-        sidePanel.setManaged(false);
-        tenantTable.getSelectionModel().clearSelection();
-    }
-
-    private void setupSearchAndFilter() {
-        if (filteredData == null) {
-            filteredData = new FilteredList<>(tenantList, b -> true);
-        }
-
-        searchField.textProperty().addListener((observable, oldValue, newValue) -> updatePredicate());
-        filterStatus.valueProperty().addListener((observable, oldValue, newValue) -> updatePredicate());
-
-        SortedList<Tenant> sortedData = new SortedList<>(filteredData);
-        sortedData.comparatorProperty().bind(tenantTable.comparatorProperty());
-        tenantTable.setItems(sortedData);
-    }
-
-    private void updatePredicate() {
-        filteredData.setPredicate(tenant -> {
-            String searchText = searchField.getText() == null ? "" : searchField.getText().toLowerCase();
-            String statusFilter = filterStatus.getValue();
-
-            String fullName = (tenant.GetFirstName() + " " + tenant.GetLastName()).toLowerCase();
-            boolean matchesSearch = searchText.isEmpty() ||
-                    fullName.contains(searchText) ||
-                    tenant.GetEmail().toLowerCase().contains(searchText);
-
-            // Determine current status via LeaseDao
-            String actualStatus = getActiveLeaseForTenant(tenant.GetTenantID()) != null ? "Active" : "Former";
-            boolean matchesStatus = statusFilter.equals("All Statuses") || actualStatus.equalsIgnoreCase(statusFilter);
-
-            return matchesSearch && matchesStatus;
-        });
-    }
-
-    @FXML
-    public void handleAddTenant() {
-        Dialog<Tenant> dialog = new Dialog<>();
-        dialog.setTitle("Add New Tenant");
-        ButtonType saveButtonType = new ButtonType("Save", ButtonBar.ButtonData.OK_DONE);
-        dialog.getDialogPane().getButtonTypes().addAll(saveButtonType, ButtonType.CANCEL);
-
-        GridPane grid = new GridPane();
-        grid.setHgap(10);
-        grid.setVgap(10);
-        grid.setPadding(new Insets(20, 50, 10, 10));
-
-        TextField firstNameField = new TextField();
-        firstNameField.setPromptText("First Name");
-        TextField lastNameField = new TextField();
-        lastNameField.setPromptText("Last Name");
-        TextField contactField = new TextField();
-        contactField.setPromptText("09XX-XXX-XXXX");
-        TextField emailField = new TextField();
-        emailField.setPromptText("email@domain.com");
-
-        grid.add(new Label("First Name:"), 0, 0);
-        grid.add(firstNameField, 1, 0);
-        grid.add(new Label("Last Name:"), 0, 1);
-        grid.add(lastNameField, 1, 1);
-        grid.add(new Label("Contact:"), 0, 2);
-        grid.add(contactField, 1, 2);
-        grid.add(new Label("Email:"), 0, 3);
-        grid.add(emailField, 1, 3);
-
-        dialog.getDialogPane().setContent(grid);
-
-        dialog.setResultConverter(dialogButton -> {
-            if (dialogButton == saveButtonType) {
-                if (firstNameField.getText().isEmpty() || lastNameField.getText().isEmpty()
-                        || contactField.getText().isEmpty()) {
-                    new Alert(Alert.AlertType.ERROR, "Name and Contact are required.").show();
-                    return null;
+    private void bindRoomCells() {
+        roomFilterCombo.setCellFactory(lv -> new ListCell<Room>() {
+            @Override
+            protected void updateItem(Room item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                } else if (item.GetRoomID() < 0) {
+                    setText("All rooms");
+                } else {
+                    setText(item.GetRoomNumber());
                 }
-
-                // Create a real Tenant Entity
-                Tenant newTenant = new Tenant();
-                newTenant.SetFirstName(firstNameField.getText());
-                newTenant.SetLastName(lastNameField.getText());
-                newTenant.SetContactNumber(contactField.getText());
-                newTenant.SetEmail(emailField.getText());
-                newTenant.SetTotalBalance(0.0); // Starts with no debt
-
-                return newTenant;
             }
-            return null;
         });
-
-        Optional<Tenant> result = dialog.showAndWait();
-        result.ifPresent(tenant -> {
-            // Save to database using our DAO
-            tenantDao.Create(tenant);
-            // Refresh table data from DB so it gets the generated ID
-            loadTableData();
+        roomFilterCombo.setButtonCell(new ListCell<Room>() {
+            @Override
+            protected void updateItem(Room item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                } else if (item.GetRoomID() < 0) {
+                    setText("All rooms");
+                } else {
+                    setText(item.GetRoomNumber());
+                }
+            }
         });
     }
-
-    @FXML
-    public void switchToRooms() throws IOException {
-        App.setRoot("admin");
+    private void configureTenantColumns() {
+        colAvatar.setCellValueFactory(cd -> new ReadOnlyObjectWrapper<>(initials(cd.getValue())));
+        colName.setCellValueFactory(cd ->
+                new ReadOnlyObjectWrapper<>(cd.getValue().GetFirstName() + " " + cd.getValue().GetLastName()));
+        colRoom.setCellValueFactory(cd -> new ReadOnlyObjectWrapper<>(roomLabel(cd.getValue())));
+        colLeaseStart.setCellValueFactory(cd -> new ReadOnlyObjectWrapper<>(leaseStart(cd.getValue())));
+        colLeaseEnd.setCellValueFactory(cd -> new ReadOnlyObjectWrapper<>(leaseEnd(cd.getValue())));
+        colRentStatus.setCellValueFactory(cd -> new ReadOnlyObjectWrapper<>(rentStatus(cd.getValue())));
+        colReqCount.setCellValueFactory(cd -> new ReadOnlyObjectWrapper<>(String.valueOf(maintenanceDao.GetByTenantID(cd.getValue().GetTenantID()).size())));
+    }
+    private void configureArchivedColumns() {
+        archColName.setCellValueFactory(cd ->
+                new ReadOnlyObjectWrapper<>(cd.getValue().GetFirstName() + " " + cd.getValue().GetLastName()));
+        archColEmail.setCellValueFactory(cd -> new ReadOnlyObjectWrapper<>(
+                cd.getValue().GetEmail() == null ? "" : cd.getValue().GetEmail()));
+        archActions.setCellFactory(col -> new TableCell<Tenant, Void>() {
+            private final Button btn = new Button("Restore");
+            {
+                btn.setStyle("-fx-background-color: #15803d; -fx-text-fill: white; -fx-font-weight: bold;");
+                btn.setOnAction(evt -> {
+                    Tenant row = getTableRow().getItem();
+                    if (row == null) {
+                        return;
+                    }
+                    tenantDao.Restore(row.GetTenantID());
+                    reloadArchivedTable();
+                    reloadMainTable();
+                });
+            }
+            @Override
+            protected void updateItem(Void item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty) {
+                    setGraphic(null);
+                } else {
+                    setGraphic(btn);
+                }
+            }
+        });
+    }
+    private Lease pickLease(Tenant tenant) {
+        List<Lease> leases = leaseDao.GetByTenantId(tenant.GetTenantID());
+        Optional<Lease> active = leases.stream().filter(l -> "ACTIVE".equalsIgnoreCase(l.GetStatus())).findFirst();
+        return active.orElseGet(() -> leases.isEmpty() ? null : leases.get(0));
+    }
+    private String roomLabel(Tenant tenant) {
+        Lease lease = pickLease(tenant);
+        if (lease == null) {
+            return "\u2014";
+        }
+        Room room = roomDao.GetByID(lease.GetRoomID());
+        return room == null ? ("#" + lease.GetRoomID()) : room.GetRoomNumber();
+    }
+    private String leaseStart(Tenant tenant) {
+        Lease lease = pickLease(tenant);
+        return lease == null ? "\u2014" : lease.GetStartDate().toString();
+    }
+    private String leaseEnd(Tenant tenant) {
+        Lease lease = pickLease(tenant);
+        return lease == null ? "\u2014" : lease.GetEndDate().toString();
+    }
+    private double tenantBalance(Tenant tenant) {
+        return tenantDao.GetTotalBalance(tenant.GetTenantID());
     }
 
+    private String rentStatus(Tenant tenant) {
+        return tenantBalance(tenant) <= 0.01 ? "Paid" : "Unpaid";
+    }
+    private String initials(Tenant tenant) {
+        String f = tenant.GetFirstName() == null ? "" : tenant.GetFirstName();
+        String l = tenant.GetLastName() == null ? "" : tenant.GetLastName();
+        String fi = f.isBlank() ? "" : f.substring(0, 1).toUpperCase();
+        String li = l.isBlank() ? "" : l.substring(0, 1).toUpperCase();
+        String combo = fi + li;
+        return combo.isBlank() ? "?" : combo;
+    }
+    private boolean roomMatches(Tenant tenant) {
+        Room roomSel = roomFilterCombo.getSelectionModel().getSelectedItem();
+        if (roomSel == null || roomSel.GetRoomID() < 0) {
+            return true;
+        }
+        Lease lease = pickLease(tenant);
+        return lease != null && lease.GetRoomID() == roomSel.GetRoomID();
+    }
+    private boolean statusMatches(Tenant tenant) {
+        String st = statusFilterCombo.getSelectionModel().getSelectedItem();
+        if (st == null || "ALL".equalsIgnoreCase(st)) {
+            return true;
+        }
+        boolean paid = tenantBalance(tenant) <= 0.01;
+        if ("PAID".equalsIgnoreCase(st)) {
+            return paid;
+        }
+        if ("UNPAID".equalsIgnoreCase(st)) {
+            return !paid;
+        }
+        return true;
+    }
+    private void reloadMainTable() {
+        List<Tenant> base;
+        String q = searchField.getText() == null ? "" : searchField.getText().trim();
+        if (q.isBlank()) {
+            base = tenantDao.GetAllActive();
+        } else {
+            base = tenantDao.GetByName(q);
+            base = base.stream().filter(t -> t.GetTimeDeletedAt() == null).collect(Collectors.toList());
+        }
+        List<Tenant> filtered = base.stream()
+                .filter(this::roomMatches)
+                .filter(this::statusMatches)
+                .collect(Collectors.toList());
+        ObservableList<Tenant> items = FXCollections.observableArrayList(filtered);
+        tenantTable.setItems(items);
+        tenantTable.refresh();
+        Tenant selected = tenantTable.getSelectionModel().getSelectedItem();
+        if (selected != null && !filtered.contains(selected)) {
+            tenantTable.getSelectionModel().clearSelection();
+            onTenantSelected(null);
+        }
+    }
+    private void reloadArchivedTable() {
+        List<Tenant> archived = tenantDao.GetAll().stream()
+                .filter(t -> t.GetTimeDeletedAt() != null)
+                .collect(Collectors.toList());
+        archivedTable.setItems(FXCollections.observableArrayList(archived));
+    }
+    private void hideDetailPanel() {
+        if (detailScrollPane != null) {
+            detailScrollPane.setVisible(false);
+            detailScrollPane.setManaged(false);
+        }
+        if (tenantSplitPane != null) {
+            tenantSplitPane.setDividerPositions(1.0);
+        }
+    }
+
+    private void showDetailPanel() {
+        if (detailScrollPane != null) {
+            detailScrollPane.setVisible(true);
+            detailScrollPane.setManaged(true);
+        }
+        if (tenantSplitPane != null) {
+            tenantSplitPane.setDividerPositions(0.62);
+        }
+    }
+
+    private void onTenantSelected(Tenant tenant) {
+        if (tenant == null) {
+            hideDetailPanel();
+            detailName.setText("\u2014");
+            detailEmail.setText("");
+            detailContact.setText("");
+            detailAddedDate.setText("Added: \u2014");
+            detailInitials.setText("TN");
+            detailBalance.setText("Total Balance: \u2014");
+            detailRentStatus.setText("Rent status: \u2014");
+            detailNextDue.setText("Next due: \u2014");
+            detailRoomNumber.setText("Room: \u2014");
+            detailRoomType.setText("Type: \u2014");
+            detailLeaseStatus.setText("Lease status: \u2014");
+            return;
+        }
+        
+        showDetailPanel();
+        detailInitials.setText(initials(tenant));
+        detailName.setText(tenant.GetFirstName() + " " + tenant.GetLastName());
+        detailEmail.setText(tenant.GetEmail());
+        detailContact.setText(tenant.GetContactNumber());
+        detailAddedDate.setText("Added: \u2014");
+        detailBalance.setText("Total Balance: " + CurrencyUtil.format(tenantBalance(tenant)));
+        detailRentStatus.setText("Rent status: " + rentStatus(tenant));
+        
+        Lease lease = pickLease(tenant);
+        if (lease == null) {
+            detailNextDue.setText("Next due: \u2014");
+            detailRoomNumber.setText("Room: \u2014");
+            detailRoomType.setText("Type: \u2014");
+            detailLeaseStatus.setText("Lease status: \u2014");
+            return;
+        }
+        
+        Room room = roomDao.GetByID(lease.GetRoomID());
+        detailLeaseStatus.setText("Lease status: " + lease.GetStatus());
+        detailRoomNumber.setText("Room: " + (room == null ? ("#" + lease.GetRoomID()) : room.GetRoomNumber()));
+        detailRoomType.setText("Type: " + (room == null ? "\u2014" : room.GetRoomType()));
+        
+        LocalDate nextDue = null;
+
+        // Check if tenant is completely paid up
+        if (tenantBalance(tenant) <= 0.01) {
+            // Explicitly set to null to signify no outstanding upcoming balance date
+            nextDue = null; 
+        } else {
+            // Tenant owes money! Find the oldest outstanding RENT charge (past or present)
+            String sql = "SELECT c.due_date FROM CHARGE c " +
+                         "JOIN LEASE l ON c.lease_id = l.lease_id " +
+                         "WHERE l.tenant_id = ? AND c.charge_type = 'RENT' " +
+                         "ORDER BY c.due_date ASC LIMIT 1";
+                         
+            try (java.sql.PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setInt(1, tenant.GetTenantID());
+                try (java.sql.ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        nextDue = rs.getDate("due_date").toLocalDate();
+                    }
+                }
+            } catch (java.sql.SQLException e) {
+                e.printStackTrace();
+            }
+            
+            // Fallback if they owe money but no charges exist yet in the database for this lease
+            if (nextDue == null) {
+                nextDue = lease.GetStartDate().plusMonths(1);
+            }
+        }
+
+        // Render based on presence of a valid due date
+        if (nextDue == null) {
+            detailNextDue.setText("Next due: \u2014");
+        } else {
+            detailNextDue.setText("Next due: " + MDFMT.format(nextDue));
+        }
+        
+        tenantTable.refresh();
+    }
     @FXML
-    public void switchToLeases() throws IOException {
-        App.setRoot("admin_leases");
+    private void handleAddTenant() {
+        dialogTenant(null);
+    }
+    @FXML
+    private void handleEditTenant() {
+        Tenant t = tenantTable.getSelectionModel().getSelectedItem();
+        if (t == null) {
+            return;
+        }
+        dialogTenant(t);
+    }
+    private void dialogTenant(Tenant edit) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/teamroy/add_tenant_dialog.fxml"));
+            Parent root = loader.load();
+            AddTenantDialogController c = loader.getController();
+            if (edit == null) {
+                c.configureCreate(conn, () -> {
+                    reloadMainTable();
+                    reloadArchivedTable();
+                });
+            } else {
+                c.configureEdit(conn, edit, () -> {
+                    reloadMainTable();
+                    onTenantSelected(edit);
+                });
+            }
+            Stage stage = new Stage();
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.setTitle(edit == null ? "Add tenant" : "Edit tenant");
+            Scene scene = new Scene(root);
+            DialogUiHelper.applyStyles(scene);
+            stage.setScene(scene);
+            stage.showAndWait();
+            reloadMainTable();
+            if (Boolean.TRUE.equals(archivedToggle.isSelected())) {
+                reloadArchivedTable();
+            }
+            Tenant current = tenantTable.getSelectionModel().getSelectedItem();
+            if (current != null) {
+                Tenant refreshed = tenantDao.GetByID(current.GetTenantID());
+                onTenantSelected(refreshed);
+            }
+        } catch (DaoException ex) {
+            showAlert(Alert.AlertType.ERROR, "Tenant error", ex.getMessage());
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            showAlert(Alert.AlertType.ERROR, "Tenant error", ex.getMessage());
+        }
+    }
+    @FXML
+    private void handleRemoveTenant() {
+        Tenant t = tenantTable.getSelectionModel().getSelectedItem();
+        if (t == null) {
+            return;
+        }
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Remove tenant");
+        alert.setHeaderText("Soft delete this tenant?");
+        alert.setContentText(t.GetFirstName() + " " + t.GetLastName());
+        Optional<ButtonType> choice = alert.showAndWait();
+        if (choice.isPresent() && choice.get() == ButtonType.OK) {
+            tenantDao.Delete(t.GetTenantID());
+            tenantTable.getSelectionModel().clearSelection();
+            reloadMainTable();
+            if (Boolean.TRUE.equals(archivedToggle.isSelected())) {
+                reloadArchivedTable();
+            }
+            onTenantSelected(null);
+        }
+    }
+    @FXML
+    private void handleExportCsv() {
+        try {
+            FileChooser chooser = new FileChooser();
+            chooser.setTitle("Export tenants CSV");
+            chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV Files", "*.csv"));
+            chooser.setInitialFileName(ExportFileNames.tenantsCsv());
+            Stage stage = (Stage) tenantTable.getScene().getWindow();
+            File dest = chooser.showSaveDialog(stage);
+            if (dest == null) {
+                return;
+            }
+            importExportService.exportTenantsToCSV(tenantDao.GetAllActive(), dest.getAbsolutePath());
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+    @FXML
+    private void handleImportCsv() {
+        try {
+            FileChooser chooser = new FileChooser();
+            chooser.setTitle("Import tenants CSV");
+            chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV Files", "*.csv"));
+            Stage stage = (Stage) tenantTable.getScene().getWindow();
+            File src = chooser.showOpenDialog(stage);
+            if (src == null) {
+                return;
+            }
+            int[] res = importExportService.importTenantsFromCSV(src.getAbsolutePath(), tenantDao);
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("Import complete");
+            alert.setHeaderText(null);
+            alert.setContentText("Imported: " + res[0] + " tenants. Skipped rows: " + res[1] + ".");
+            alert.showAndWait();
+            reloadMainTable();
+            if (Boolean.TRUE.equals(archivedToggle.isSelected())) {
+                reloadArchivedTable();
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            showAlert(Alert.AlertType.ERROR, "Import failed", ex.getMessage());
+        }
+    }
+
+    private void showAlert(Alert.AlertType type, String title, String message) {
+        Alert alert = new Alert(type);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message == null ? "" : message);
+        alert.showAndWait();
     }
 }

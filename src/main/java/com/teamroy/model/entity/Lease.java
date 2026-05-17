@@ -9,7 +9,8 @@ public class Lease {
     private LocalDate startDate;
     private LocalDate endDate;
     private double monthlyRent;
-    private String status; // 'ACTIVE', 'EXPIRED', 'TERMINATED'
+    private double balance;
+    private String status;
 
     public Lease() {
     }
@@ -23,7 +24,6 @@ public class Lease {
         this.status = status;
     }
 
-    // -- Getters --
     public int GetLeaseID() {
         return leaseId;
     }
@@ -48,11 +48,14 @@ public class Lease {
         return monthlyRent;
     }
 
+    public double GetBalance() {
+        return balance;
+    }
+
     public String GetStatus() {
         return status;
     }
 
-    // -- Setters --
     public void SetLeaseID(int leaseId) {
         this.leaseId = leaseId;
     }
@@ -75,6 +78,10 @@ public class Lease {
 
     public void SetMonthlyRent(double monthlyRent) {
         this.monthlyRent = monthlyRent;
+    }
+
+    public void SetBalance(double balance) {
+        this.balance = balance;
     }
 
     public void SetStatus(String status) {

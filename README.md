@@ -1,64 +1,64 @@
-# Kubo Boarding House Management System
+# Kubo Property Management System
 
-Welcome to the Kubo project! This is a JavaFX application integrated with a MySQL database. Follow the steps below to get your local environment set up exactly like the development build.
+Kubo is a JavaFX-based boarding house and property management system. It is designed to help manage tenants, rooms, leases, and payments. It has two main sides: an Admin dashboard for the landlord/manager, and a Tenant portal for the renters.
 
-# Prerequisites
-Before you start, make sure you have the following installed:
+## ✨ Features
 
-    - Java 17 or higher (OpenJDK recommended)
+### Admin Side
+* **Manage Tenants:** Add new tenants or soft-delete them to keep records.
+* **Manage Rooms:** Track room capacity, pricing, and see who is currently occupying them.
+* **Leases:** See active, expired, and terminated leases.
+* **Payments:** Accept and verify tenant payments.
+* **Maintenance & Documents:** Check maintenance requests and view uploaded tenant documents.
+* **Activity Logs:** Automatically tracks things like payments and lease updates using database triggers.
 
-    - Maven (to handle dependencies)
+### Tenant Side
+* **Dashboard:** See your current balance, lease details, and announcements.
+* **Payments:** Submit payment records to the admin.
+* **Maintenance:** Report issues (like a leaky faucet) for the admin to fix.
+* **Rooms:** Check out available rooms and prices.
 
-    - MySQL Server (running locally)
+## 🛠️ Built With
+* **Frontend:** JavaFX (FXML + CSS)
+* **Backend:** Java
+* **Database:** MySQL
+* **Build Tool:** Maven
 
-    - VS Code with the Extension Pack for Java
+## 🚀 How to Run (Zero Setup!)
 
-# Getting Started
-### 1. Clone the Repository
+This project is designed to be "plug-and-play" so you do not need to manually run any SQL scripts to test it. The app handles the database creation automatically on its first run.
 
-```bash
-git clone https://github.com/sudo-Wyko/kubo
-cd kubo
-git checkout feature/login-screen
-```
+### Prerequisites
+1. **Java JDK 17+**
+2. **MySQL Server** running locally.
+3. **Maven**
 
-### 2. Database Setup
-
-You must create the local database so the app has something to talk to.
-
-Open schema.sql inside kubo/database.
-
-Run the commands inside of the sql file in MySQL
-
-### 3. Configure your Credentials
-
-We use a config.properties file to handle local database connections. This file is ignored by Git for security.
-
-Create a config.properties file inside the project root.
-
-Open config.properties and enter your actual MySQL root password:
+### 1. Configure the Database Connection
+Open the `config.properties` file in the root folder and make sure your MySQL username and password are correct:
 
 ```properties
-    db.url=jdbc:mysql://localhost:3306/kubo_db
-
-    db.user=root
-
-    db.password=YOUR_MYSQL_PASSWORD_HERE
+db.host=jdbc:mysql://localhost:3306
+db.name=kubo_db
+db.user=your_username_here
+db.password=your_password_here
 ```
 
-# Building and Running
+### 2. Run the App
+**Important:** Make sure the `kubo_db` database does **not** exist yet. If you already have an old broken version, drop it in your MySQL console first (`DROP DATABASE kubo_db;`). 
 
-We use the JavaFX Maven plugin. You don't need to manually setup libraries; Maven handles it.
+Run the application through your IDE by running the main method in `App.java`, or use Maven in your terminal:
 
-To run the app:
 ```bash
-
-mvn clean javafx:run
-
-```
-Please create a new branch for every feature you work on:
-```bash
-git checkout -b feature/your-feature-name
+mvn clean compile
+mvn javafx:run
 ```
 
-For example, I did ```bash git checkout -b feature/login-screen``` to work on the login screen.
+On startup, the app will automatically create the `kubo_db` database, build all the tables, and set up the default accounts. 
+
+### 3. Login
+Once the app opens, you can log in immediately using the Super Admin account:
+* **Username:** `admin`
+* **Password:** `admin123`
+
+New tenants can also create their own accounts right from the sign-up screen.
+s

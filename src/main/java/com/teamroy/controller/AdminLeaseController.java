@@ -1,306 +1,244 @@
 package com.teamroy.controller;
-
-import com.teamroy.App;
-import com.teamroy.DatabaseUtility;
-import com.teamroy.model.dao.*;
-import com.teamroy.model.entity.*;
-
-import java.io.IOException;
-import java.sql.Connection;
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Optional;
-
+import com.teamroy.CurrencyUtil;
+import com.teamroy.ConnectionManager;
+import com.teamroy.model.dao.LeaseDaoImpl;
+import com.teamroy.model.dao.RoomDaoImpl;
+import com.teamroy.model.dao.TenantDaoImpl;
+import com.teamroy.model.entity.Lease;
+import com.teamroy.model.entity.Tenant;
+import javafx.animation.PauseTransition;
 import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
-import javafx.scene.control.*;
-import javafx.scene.layout.*;
+import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.util.StringConverter;
-
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.VBox;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
+import javafx.util.Duration;
+import java.sql.Connection;
+import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 public class AdminLeaseController {
-
     @FXML
     private TextField searchField;
     @FXML
-    private ComboBox<String> filterStatus;
-
-    // The container for our cards instead of a TableView
+    private ComboBox<String> statusFilterCombo;
     @FXML
-    private FlowPane leaseCardsContainer;
-
-    private ObservableList<Lease> leaseList;
-    private FilteredList<Lease> filteredData;
-
-    // Our DAO Interfaces
-    private LeaseDao leaseDao;
-    private TenantDao tenantDao;
-    private RoomDao roomDao;
-
+    private ScrollPane leasesScrollPane;
     @FXML
-    public void initialize() {
-        // 1. Grab the global database connection and initialize DAOs!
-        Connection conn = DatabaseUtility.getConnection();
-
-        if (conn != null) {
+    private FlowPane leasesFlowPane;
+    private Connection conn;
+    private LeaseDaoImpl leaseDao;
+    private TenantDaoImpl tenantDao;
+    private RoomDaoImpl roomDao;
+    private List<Lease> cachedLeases = List.of();
+    private Map<Integer, String> tenantNameById = Map.of();
+    private final PauseTransition searchDebounce = new PauseTransition(Duration.millis(300));
+    @FXML
+    private void initialize() {
+        try {
+            conn = ConnectionManager.getConnection();
             leaseDao = new LeaseDaoImpl(conn);
             tenantDao = new TenantDaoImpl(conn);
             roomDao = new RoomDaoImpl(conn);
-        } else {
-            System.err.println("Failed to connect to the database in AdminLeaseController.");
+        } catch (Exception ex) {
+            System.err.println("Failed to initialize leases view: " + ex.getMessage());
+            ex.printStackTrace();
+            return;
         }
-
-        // 2. Setup the UI Filter
-        filterStatus.setItems(FXCollections.observableArrayList("All Statuses", "Active", "Pending", "Expired"));
-        filterStatus.setValue("All Statuses");
-
-        // 3. Load Real Data
-        loadLeaseData();
-        setupSearchAndFilter();
+        leasesScrollPane.setFitToWidth(true);
+        statusFilterCombo.setItems(FXCollections.observableArrayList(
+                "All", "ACTIVE", "EXPIRED", "TERMINATED"));
+        statusFilterCombo.getSelectionModel().selectFirst();
+        statusFilterCombo.getSelectionModel().selectedItemProperty().addListener((o, ov, nv) -> rebuildFiltered());
+        searchDebounce.setOnFinished(e -> rebuildFiltered());
+        searchField.textProperty().addListener((o, ov, nv) -> searchDebounce.playFromStart());
+        reloadFromDatabase();
     }
-
-    private void loadLeaseData() {
-        if (leaseDao != null) {
-            List<Lease> dbLeases = leaseDao.GetAll();
-            leaseList = FXCollections.observableArrayList(dbLeases);
-        } else {
-            leaseList = FXCollections.observableArrayList();
-        }
-
-        if (filteredData != null) {
-            filteredData = new FilteredList<>(leaseList, b -> true);
-            renderCards();
-        }
-    }
-
-    private void setupSearchAndFilter() {
-        filteredData = new FilteredList<>(leaseList, b -> true);
-
-        // Listen for changes
-        searchField.textProperty().addListener((observable, oldValue, newValue) -> updatePredicate());
-        filterStatus.valueProperty().addListener((observable, oldValue, newValue) -> updatePredicate());
-
-        // Listen to the main list for additions/removals
-        filteredData.addListener((javafx.collections.ListChangeListener.Change<? extends Lease> c) -> {
-            renderCards();
-        });
-
-        // Initial render
-        renderCards();
-    }
-
-    private void updatePredicate() {
-        filteredData.setPredicate(lease -> {
-            String searchText = searchField.getText() == null ? "" : searchField.getText().toLowerCase();
-            String status = filterStatus.getValue();
-
-            // Fetch actual names/numbers from DB using the IDs stored in the Lease
-            Tenant tenant = tenantDao != null ? tenantDao.GetByID(lease.GetTenantID()) : null;
-            Room room = roomDao != null ? roomDao.GetByID(lease.GetRoomID()) : null;
-
-            String tenantName = tenant != null ? (tenant.GetFirstName() + " " + tenant.GetLastName()).toLowerCase()
-                    : "";
-            String roomNum = room != null ? room.GetRoomNumber().toLowerCase() : "";
-
-            boolean matchesSearch = searchText.isEmpty() ||
-                    tenantName.contains(searchText) ||
-                    roomNum.contains(searchText);
-
-            boolean matchesStatus = status.equals("All Statuses") ||
-                    (lease.GetStatus() != null && lease.GetStatus().equalsIgnoreCase(status));
-
-            return matchesSearch && matchesStatus;
-        });
-
-        renderCards();
-    }
-
-    private void renderCards() {
-        leaseCardsContainer.getChildren().clear();
-        for (Lease lease : filteredData) {
-            leaseCardsContainer.getChildren().add(createLeaseCard(lease));
+    @FXML
+    private void handleAddLease() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/teamroy/add_lease_dialog.fxml"));
+            Parent root = loader.load();
+            AddLeaseDialogController c = loader.getController();
+            c.configureCreate(conn, this::reloadFromDatabase);
+            Stage stage = new Stage();
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.setTitle("Create lease");
+            stage.setScene(new Scene(root));
+            stage.showAndWait();
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
     }
-
-    private VBox createLeaseCard(Lease lease) {
-        VBox card = new VBox(12);
-        card.setPadding(new Insets(20));
-        card.setPrefWidth(280);
-        card.setStyle(
-                "-fx-background-color: white; -fx-background-radius: 10; -fx-border-color: #e2e8f0; -fx-border-radius: 10; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 10, 0, 0, 0);");
-
-        // Lookup related entities
-        Tenant tenant = tenantDao != null ? tenantDao.GetByID(lease.GetTenantID()) : null;
-        Room room = roomDao != null ? roomDao.GetByID(lease.GetRoomID()) : null;
-
-        String displayName = tenant != null ? tenant.GetFirstName() + " " + tenant.GetLastName() : "Unknown Tenant";
-        String displayRoom = room != null ? room.GetRoomNumber() : "Unknown";
-
-        // Top Row: Tenant Name and Status Badge
-        HBox topRow = new HBox();
-        topRow.setAlignment(Pos.CENTER_LEFT);
-        Label nameLabel = new Label(displayName);
-        nameLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #1e293b;");
-
-        Label statusLabel = new Label(lease.GetStatus() != null ? lease.GetStatus().toUpperCase() : "UNKNOWN");
-        statusLabel.setPadding(new Insets(3, 8, 3, 8));
-        statusLabel.setStyle("-fx-font-size: 11px; -fx-font-weight: bold; -fx-background-radius: 12;");
-
-        if ("ACTIVE".equalsIgnoreCase(lease.GetStatus())) {
-            statusLabel.setStyle(statusLabel.getStyle() + "-fx-background-color: #dcfce7; -fx-text-fill: #166534;");
-        } else if ("PENDING".equalsIgnoreCase(lease.GetStatus())) {
-            statusLabel.setStyle(statusLabel.getStyle() + "-fx-background-color: #fef08a; -fx-text-fill: #854d0e;");
-        } else {
-            statusLabel.setStyle(statusLabel.getStyle() + "-fx-background-color: #fee2e2; -fx-text-fill: #991b1b;");
+    private void reloadFromDatabase() {
+        cachedLeases = leaseDao.GetAll();
+        tenantNameById = tenantDao.GetAll().stream()
+                .collect(Collectors.toMap(Tenant::GetTenantID, t -> combineName(t), (a, b) -> a));
+        Map<Integer, String> roomNumberByRoomId =
+                roomDao.GetAll().stream().collect(Collectors.toMap(
+                        r -> r.GetRoomID(), r -> r.GetRoomNumber(), (a, b) -> a));
+        rebuildFiltered(roomNumberByRoomId);
+    }
+    private Set<Integer> expiringLeaseIds() {
+        Set<Integer> set = new HashSet<>();
+        for (Lease l : leaseDao.GetExpiringSoon(LocalDate.now().plusDays(30))) {
+            set.add(l.GetLeaseID());
         }
-
+        return set;
+    }
+    private void rebuildFiltered() {
+        Map<Integer, String> roomNumberByRoomId = roomDao.GetAll().stream().collect(Collectors.toMap(
+                r -> r.GetRoomID(), r -> r.GetRoomNumber(), (a, b) -> a));
+        rebuildFiltered(roomNumberByRoomId);
+    }
+    private void rebuildFiltered(Map<Integer, String> roomNumberByRoomId) {
+        leasesFlowPane.getChildren().clear();
+        String qRaw = searchField.getText().trim().toLowerCase();
+        String statusPick = statusFilterCombo.getSelectionModel().getSelectedItem();
+        Set<Integer> expiring = expiringLeaseIds();
+        List<Lease> rows =
+                cachedLeases.stream().filter(lease -> filterLease(lease, statusPick, qRaw, roomNumberByRoomId))
+                        .sorted((a, b) -> Integer.compare(a.GetLeaseID(), b.GetLeaseID()))
+                        .collect(Collectors.toList());
+        for (Lease lease : rows) {
+            String tenantLabel = tenantLabel(lease.GetTenantID());
+            String roomLabel = roomNumberByRoomId.getOrDefault(lease.GetRoomID(),
+                    Integer.toString(lease.GetRoomID()));
+            boolean amber = expiring.contains(lease.GetLeaseID())
+                    && "ACTIVE".equalsIgnoreCase(lease.GetStatus());
+            leasesFlowPane.getChildren().add(buildLeaseCard(lease, tenantLabel, roomLabel, amber));
+        }
+    }
+    private boolean filterLease(
+            Lease lease, String statusPick, String qRaw, Map<Integer, String> roomNumberByRoomId) {
+        if (!"All".equalsIgnoreCase(statusPick)
+                && !lease.GetStatus().equalsIgnoreCase(statusPick)) {
+            return false;
+        }
+        if (qRaw.isEmpty()) {
+            return true;
+        }
+        String tname = tenantLabel(lease.GetTenantID()).toLowerCase();
+        String rnum = roomNumberByRoomId.getOrDefault(lease.GetRoomID(), "").toLowerCase();
+        return tname.contains(qRaw) || rnum.contains(qRaw);
+    }
+    private String tenantLabel(int tenantId) {
+        return tenantNameById.getOrDefault(tenantId, combineNameSafe(tenantId));
+    }
+    private String combineNameSafe(int tenantId) {
+        Tenant t = tenantDao.GetByID(tenantId);
+        return t == null ? ("Tenant#" + tenantId) : combineName(t);
+    }
+    private static String combineName(Tenant t) {
+        return t.GetFirstName() + " " + t.GetLastName();
+    }
+    private VBox buildLeaseCard(Lease lease, String tenantName, String roomNum, boolean expiringSoon) {
+        VBox card = new VBox(8);
+        card.setPadding(new Insets(12));
+        card.setPrefWidth(220);
+        card.setMinWidth(220);
+        card.setMaxWidth(220);
+        card.getStyleClass().addAll("card", "lease-card");
+        if (expiringSoon) {
+            card.getStyleClass().add("lease-card-expiring");
+        }
+        Label nameLabel = new Label(tenantName);
+        nameLabel.getStyleClass().add("card-title");
+        nameLabel.setWrapText(true);
+        Label badge = leaseStatusBadge(lease);
+        Label roomLabelUi = new Label("Room " + roomNum);
+        roomLabelUi.getStyleClass().add("card-subtitle");
+        Label range = new Label(lease.GetStartDate() + " â†’ " + lease.GetEndDate());
+        range.getStyleClass().add("card-subtitle");
+        Label rentLbl = new Label(CurrencyUtil.format(lease.GetMonthlyRent()) + " / mo");
+        rentLbl.getStyleClass().add("lease-rent");
         Region spacer = new Region();
-        HBox.setHgrow(spacer, Priority.ALWAYS);
-        topRow.getChildren().addAll(nameLabel, spacer, statusLabel);
-
-        // Details
-        Label roomLabel = new Label("Room: " + displayRoom);
-        roomLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #475569;");
-
-        Label datesLabel = new Label(lease.GetStartDate() + " to " + lease.GetEndDate());
-        datesLabel.setStyle("-fx-font-size: 13px; -fx-text-fill: #64748b;");
-
-        // Bottom Row: Action Buttons
-        HBox actionBox = new HBox(10);
-        actionBox.setPadding(new Insets(10, 0, 0, 0));
-
+        VBox.setVgrow(spacer, Priority.ALWAYS);
         Button editBtn = new Button("Edit");
-        editBtn.setStyle("-fx-background-color: #f1f5f9; -fx-text-fill: #334155; -fx-cursor: hand;");
-        editBtn.setMaxWidth(Double.MAX_VALUE);
-        HBox.setHgrow(editBtn, Priority.ALWAYS);
-        editBtn.setOnAction(e -> handleEdit(lease, displayName));
-
-        Button renewBtn = new Button("Renew");
-        renewBtn.setStyle("-fx-background-color: #e0f2fe; -fx-text-fill: #0369a1; -fx-cursor: hand;");
-        renewBtn.setMaxWidth(Double.MAX_VALUE);
-        HBox.setHgrow(renewBtn, Priority.ALWAYS);
-        renewBtn.setOnAction(e -> handleRenew(lease, displayName));
-
-        actionBox.getChildren().addAll(editBtn, renewBtn);
-        card.getChildren().addAll(topRow, roomLabel, datesLabel, new Separator(), actionBox);
+        editBtn.getStyleClass().add("secondary-button");
+        editBtn.setOnAction(ev -> handleEdit(lease));
+        Button termBtn = new Button("Terminate");
+        termBtn.getStyleClass().add("danger-button");
+        termBtn.setOnAction(ev -> handleTerminate(lease));
+        termBtn.setDisable(!"ACTIVE".equalsIgnoreCase(lease.GetStatus()));
+        HBox actions = new HBox(8, editBtn, termBtn);
+        actions.setAlignment(Pos.CENTER_LEFT);
+        card.getChildren().addAll(nameLabel, badge, roomLabelUi, range, rentLbl, spacer, actions);
         return card;
     }
-
-    private void handleEdit(Lease lease, String tenantName) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION, "Editing lease for: " + tenantName);
-        alert.setHeaderText("Edit Feature");
-        alert.show();
-    }
-
-    private void handleRenew(Lease lease, String tenantName) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION, "Renewing lease for: " + tenantName);
-        alert.setHeaderText("Renew Feature");
-        alert.show();
-    }
-
-    @FXML
-    public void handleAddLease() {
-        Dialog<Lease> dialog = new Dialog<>();
-        dialog.setTitle("Add New Lease Agreement");
-        ButtonType saveButtonType = new ButtonType("Save", ButtonBar.ButtonData.OK_DONE);
-        dialog.getDialogPane().getButtonTypes().addAll(saveButtonType, ButtonType.CANCEL);
-
-        GridPane grid = new GridPane();
-        grid.setHgap(10);
-        grid.setVgap(10);
-        grid.setPadding(new Insets(20, 50, 10, 10));
-
-        // Use ComboBoxes to fetch Real Entities from Database
-        ComboBox<Tenant> tenantBox = new ComboBox<>();
-        if (tenantDao != null) {
-            tenantBox.getItems().addAll(tenantDao.GetAll());
+    private Label leaseStatusBadge(Lease lease) {
+        String display = displayLeaseStatusText(lease);
+        Label label = new Label(display);
+        label.getStyleClass().addAll("status-badge", "lease-status-badge");
+        if ("ACTIVE".equals(display)) {
+            label.getStyleClass().add("badge-active");
+        } else if ("PENDING".equals(display)) {
+            label.getStyleClass().add("badge-pending");
+        } else if ("TERMINATED".equals(display)) {
+            label.getStyleClass().add("badge-terminated");
+        } else if ("EXPIRED".equals(display)) {
+            label.getStyleClass().add("badge-expired");
         }
-        tenantBox.setConverter(new StringConverter<Tenant>() {
-            @Override
-            public String toString(Tenant t) {
-                return t == null ? "" : t.GetFirstName() + " " + t.GetLastName();
-            }
-
-            @Override
-            public Tenant fromString(String s) {
-                return null;
-            }
-        });
-        tenantBox.setPromptText("Select Tenant");
-
-        ComboBox<Room> roomBox = new ComboBox<>();
-        if (roomDao != null) {
-            roomBox.getItems().addAll(roomDao.GetAll());
+        return label;
+    }
+    private static String displayLeaseStatusText(Lease lease) {
+        String status = lease.GetStatus();
+        if ("ACTIVE".equalsIgnoreCase(status) && lease.GetStartDate() != null
+                && LocalDate.now().isBefore(lease.GetStartDate())) {
+            return "PENDING";
         }
-        roomBox.setConverter(new StringConverter<Room>() {
-            @Override
-            public String toString(Room r) {
-                return r == null ? "" : r.GetRoomNumber() + " (₱" + r.GetPrice() + ")";
-            }
-
-            @Override
-            public Room fromString(String s) {
-                return null;
-            }
-        });
-        roomBox.setPromptText("Select Room");
-
-        DatePicker startDatePicker = new DatePicker();
-        DatePicker endDatePicker = new DatePicker();
-
-        grid.add(new Label("Tenant:"), 0, 0);
-        grid.add(tenantBox, 1, 0);
-        grid.add(new Label("Room:"), 0, 1);
-        grid.add(roomBox, 1, 1);
-        grid.add(new Label("Start Date:"), 0, 2);
-        grid.add(startDatePicker, 1, 2);
-        grid.add(new Label("End Date:"), 0, 3);
-        grid.add(endDatePicker, 1, 3);
-
-        dialog.getDialogPane().setContent(grid);
-
-        dialog.setResultConverter(dialogButton -> {
-            if (dialogButton == saveButtonType) {
-                if (startDatePicker.getValue() == null || endDatePicker.getValue() == null ||
-                        tenantBox.getValue() == null || roomBox.getValue() == null) {
-                    new Alert(Alert.AlertType.ERROR, "Please fill out all fields and select from the dropdowns.")
-                            .show();
-                    return null;
-                }
-
-                // Map the UI selections to a real Lease Entity
-                Lease newLease = new Lease();
-                newLease.SetTenantID(tenantBox.getValue().GetTenantID());
-                newLease.SetRoomID(roomBox.getValue().GetRoomID());
-                newLease.SetStartDate(startDatePicker.getValue());
-                newLease.SetEndDate(endDatePicker.getValue());
-                newLease.SetMonthlyRent(roomBox.getValue().GetPrice()); // Pull price from Room mapping
-                newLease.SetStatus("Pending");
-
-                return newLease;
-            }
-            return null;
-        });
-
-        Optional<Lease> result = dialog.showAndWait();
-        result.ifPresent(lease -> {
-            if (leaseDao != null) {
-                leaseDao.Create(lease); // Save to MySQL
-                loadLeaseData(); // Refresh UI
-            }
-        });
+        return status != null ? status : "";
     }
-
-    @FXML
-    public void switchToRooms() throws IOException {
-        App.setRoot("admin");
+    private void handleEdit(Lease lease) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/teamroy/add_lease_dialog.fxml"));
+            Parent root = loader.load();
+            AddLeaseDialogController c = loader.getController();
+            c.configureEdit(conn, lease, this::reloadFromDatabase);
+            Stage stage = new Stage();
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.setTitle("Edit lease");
+            stage.setScene(new Scene(root));
+            stage.showAndWait();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
     }
-
-    @FXML
-    public void switchToTenants() throws IOException {
-        App.setRoot("admin_tenants");
+    private void handleTerminate(Lease lease) {
+        if (!"ACTIVE".equalsIgnoreCase(lease.GetStatus())) {
+            return;
+        }
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+        confirm.setTitle("Terminate lease");
+        confirm.setHeaderText(null);
+        confirm.setContentText("Terminate lease #" + lease.GetLeaseID() + " for this tenant?");
+        ButtonType yes = ButtonType.YES;
+        ButtonType no = ButtonType.NO;
+        confirm.getButtonTypes().setAll(yes, no);
+        confirm.showAndWait().ifPresent(answer -> {
+            if (answer == yes) {
+                leaseDao.UpdateStatus(lease.GetLeaseID(), "TERMINATED");
+                reloadFromDatabase();
+            }
+        });
     }
 }

@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.chart.BarChart?>
+<?import javafx.scene.chart.CategoryAxis?>
+<?import javafx.scene.chart.NumberAxis?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<ScrollPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.teamroy.controller.AdminDashboardController"
+            fitToWidth="true"
+            styleClass="main-scroll-pane">
+    <VBox spacing="16" styleClass="content-view dashboard-root">
+        <HBox alignment="CENTER_LEFT">
+            <VBox spacing="4" HBox.hgrow="ALWAYS">
+                <Label text="Welcome, Admin" styleClass="header-label"/>
+                <Label text="Quick overview of occupancy, revenue, and tasks." styleClass="card-subtitle"/>
+            </VBox>
+        </HBox>
+
+        <GridPane hgap="16" vgap="16">
+            <columnConstraints>
+                <ColumnConstraints hgrow="ALWAYS" percentWidth="33.333"/>
+                <ColumnConstraints hgrow="ALWAYS" percentWidth="33.333"/>
+                <ColumnConstraints hgrow="ALWAYS" percentWidth="33.333"/>
+            </columnConstraints>
+
+            <VBox GridPane.rowIndex="0" GridPane.columnIndex="0" GridPane.rowSpan="2"
+                  spacing="12" styleClass="card">
+                <Label text="Operations overview" styleClass="card-title"/>
+                <VBox spacing="6">
+                    <Label text="Occupancy" styleClass="card-subtitle"/>
+                    <Label fx:id="lblTotalRooms" text="Total rooms: 0" styleClass="row-description"/>
+                    <Label fx:id="lblOccupiedRooms" text="Occupied rooms: 0" styleClass="row-description"/>
+                    <Label fx:id="lblAvailableBeds" text="Available beds: 0" styleClass="dashboard-positive"/>
+                </VBox>
+                <Separator/>
+                <VBox fx:id="maintenanceCard" spacing="10" styleClass="dashboard-clickable"
+                      onMouseClicked="#handleMaintenanceCardClick">
+                    <Label text="Maintenance" styleClass="card-subtitle"/>
+                    <HBox spacing="16">
+                        <VBox spacing="2" HBox.hgrow="ALWAYS">
+                            <Label text="New" styleClass="card-subtitle"/>
+                            <Label fx:id="lblMaintNew" text="NEW: 0" styleClass="dashboard-warn"/>
+                        </VBox>
+                        <VBox spacing="2" HBox.hgrow="ALWAYS">
+                            <Label text="In progress" styleClass="card-subtitle"/>
+                            <Label fx:id="lblMaintProgress" text="IN-PROGRESS: 0" styleClass="dashboard-warn-2"/>
+                        </VBox>
+                    </HBox>
+                    <Label text="Click to open the maintenance board." styleClass="card-subtitle"/>
+                </VBox>
+            </VBox>
+
+            <VBox GridPane.rowIndex="0" GridPane.columnIndex="1" spacing="10" styleClass="card">
+                <Label text="Revenue overview" styleClass="card-title"/>
+                <BarChart fx:id="revenueChart" legendVisible="true" prefHeight="220" animated="false" styleClass="dashboard-chart">
+                    <xAxis><CategoryAxis label="Month"/></xAxis>
+                    <yAxis><NumberAxis label="Verified (sum)"/></yAxis>
+                </BarChart>
+                <Label text="Shows verified payments for the last 6 months." styleClass="card-subtitle"/>
+            </VBox>
+
+            <VBox GridPane.rowIndex="0" GridPane.columnIndex="2" spacing="10" styleClass="card">
+                <Label text="Quick actions" styleClass="card-title"/>
+                <Button text="Add Charge" maxWidth="Infinity" onAction="#handleAddCharge" styleClass="primary-button"/>
+                <Button text="Add Tenant" maxWidth="Infinity" onAction="#handleAddTenant" styleClass="primary-button"/>
+                <Button text="Create Lease" maxWidth="Infinity" onAction="#handleCreateLease" styleClass="primary-button"/>
+                <Button text="Create Announcement" maxWidth="Infinity" onAction="#handleCreateAnnouncement" styleClass="primary-button"/>
+                <Label text="Common admin tasks in one place." styleClass="card-subtitle"/>
+            </VBox>
+
+            <VBox GridPane.rowIndex="1" GridPane.columnIndex="1" spacing="10" styleClass="card">
+                <Label text="Leases ending soon (≤30 days)" styleClass="card-title"/>
+                <ListView fx:id="expiringLeaseList" prefHeight="170" styleClass="dashboard-list"/>
+                <Label text="Follow up early to prevent gaps in occupancy." styleClass="card-subtitle"/>
+            </VBox>
+
+            <VBox GridPane.rowIndex="1" GridPane.columnIndex="2" spacing="10" styleClass="card">
+                <Label text="Announcements" styleClass="card-title"/>
+                <VBox fx:id="announcementsBox" spacing="10"/>
+            </VBox>
+
+            <VBox GridPane.rowIndex="2" GridPane.columnIndex="0" GridPane.columnSpan="3"
+                  spacing="10" styleClass="card">
+                <Label text="Recent activity • last payments" styleClass="card-title"/>
+                <ListView fx:id="recentActivityList" prefHeight="220" styleClass="dashboard-list"/>
+            </VBox>
+        </GridPane>
+    </VBox>
+</ScrollPane>

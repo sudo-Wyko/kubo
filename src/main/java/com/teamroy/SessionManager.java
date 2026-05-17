@@ -1,38 +1,34 @@
 package com.teamroy;
-
-public class SessionManager {
-    private static int currentUserId = -1;
-    private static String currentUserRole = null;
-    private static int currentTenantId = -1; // Specific to tenants
-
-    // Call this when a user successfully logs in
-    public static void loginUser(int userId, String role) {
-        currentUserId = userId;
-        currentUserRole = role;
+import com.teamroy.model.entity.Tenant;
+import com.teamroy.model.entity.UserAccount;
+public final class SessionManager {
+    private static UserAccount currentUser;
+    private static Tenant currentTenant;
+    private SessionManager() {
     }
-
-    // Call this when you fetch the tenant profile
-    public static void setTenantId(int tenantId) {
-        currentTenantId = tenantId;
+    public static void setCurrentUser(UserAccount user) {
+        currentUser = user;
     }
-
-    // Call this when the user logs out
-    public static void logout() {
-        currentUserId = -1;
-        currentUserRole = null;
-        currentTenantId = -1;
+    public static UserAccount getCurrentUser() {
+        return currentUser;
     }
-
-    // Getters for your controllers to use
+    public static void setCurrentTenant(Tenant tenant) {
+        currentTenant = tenant;
+    }
+    public static Tenant getCurrentTenant() {
+        return currentTenant;
+    }
     public static int getCurrentUserId() {
-        return currentUserId;
+        return currentUser != null ? currentUser.GetUserID() : -1;
     }
-
-    public static String getCurrentUserRole() {
-        return currentUserRole;
-    }
-
     public static int getCurrentTenantId() {
-        return currentTenantId;
+        return currentTenant != null ? currentTenant.GetTenantID() : -1;
+    }
+    public static void logout() {
+        clear();
+    }
+    public static void clear() {
+        currentUser = null;
+        currentTenant = null;
     }
 }

@@ -1,84 +1,90 @@
 package com.teamroy.controller;
-
 import com.teamroy.App;
-import com.teamroy.DatabaseUtility;
-import com.teamroy.SessionManager; // Make sure this import matches where your SessionManager is located!
+import com.teamroy.ConnectionManager;
+import com.teamroy.PasswordUtil;
+import com.teamroy.SessionManager;
+import com.teamroy.model.dao.TenantDaoImpl;
+import com.teamroy.model.dao.UserAccountDaoImpl;
+import com.teamroy.model.entity.Tenant;
+import com.teamroy.model.entity.UserAccount;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
-
+import java.io.IOException;
 import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-
+import java.util.logging.Level;
+import java.util.logging.Logger;
 public class LoginController {
-
+    private static final Logger LOGGER = Logger.getLogger(LoginController.class.getName());
     @FXML
     private TextField usernameField;
     @FXML
     private PasswordField passwordField;
     @FXML
     private Label errorLabel;
-
+    @FXML
+    private void handleSignupLink() {
+        try {
+            App.setRoot("signup");
+        } catch (IOException e) {
+            errorLabel.setText("Could not load signup page.");
+            LOGGER.log(Level.SEVERE, "Failed to load signup view.", e);
+        }
+    }
     @FXML
     private void handleLogin() {
-        String username = usernameField.getText();
+        String username = usernameField.getText().trim();
         String password = passwordField.getText();
-
         if (username.isBlank() || password.isBlank()) {
             errorLabel.setText("Please enter credentials.");
             return;
         }
-
-        try (Connection conn = DatabaseUtility.getConnection()) {
-            if (conn == null) {
-                errorLabel.setText("Database connection failed.");
-                return;
-            }
-
-            // 1. Grab user_id as well as the role
-            String sql = "SELECT user_id, role FROM USER_ACCOUNT WHERE username = ? AND password_hash = ?";
-            PreparedStatement pstmt = conn.prepareStatement(sql);
-            pstmt.setString(1, username);
-            pstmt.setString(2, password);
-
-            ResultSet rs = pstmt.executeQuery();
-
-            if (rs.next()) {
-                int userId = rs.getInt("user_id");
-                String role = rs.getString("role");
-
-                // 2. Save the User ID and Role to the SessionManager
-                SessionManager.loginUser(userId, role);
-
-                if ("ADMIN".equalsIgnoreCase(role)) {
-                    App.setRoot("admin");
-                } else {
-                    // 3. If it's a tenant, fetch their tenant_id using their user_id
-                    String tenantSql = "SELECT tenant_id FROM TENANT WHERE user_id = ?";
-                    PreparedStatement tenantStmt = conn.prepareStatement(tenantSql);
-                    tenantStmt.setInt(1, userId);
-                    ResultSet tenantRs = tenantStmt.executeQuery();
-
-                    if (tenantRs.next()) {
-                        int tenantId = tenantRs.getInt("tenant_id");
-
-                        // 4. Save the Tenant ID to the SessionManager
-                        SessionManager.setTenantId(tenantId);
-
-                        // 5. Now it's safe to load the tenant dashboard
-                        App.setRoot("tenant");
+        SessionManager.clear();
+        try {
+            Connection conn = ConnectionManager.getConnection();
+            try {
+                UserAccountDaoImpl userDao = new UserAccountDaoImpl(conn);
+                UserAccount user = userDao.GetByUsername(username);
+                if (user != null) {
+                    String hashedPassword = PasswordUtil.hash(password);
+                    String storedPassword = user.GetPassword();
+                    if (hashedPassword.equals(storedPassword)) {
+                        SessionManager.setCurrentUser(user);
+                        String role = user.GetRole();
+                        if ("TENANT".equalsIgnoreCase(role)) {
+                            TenantDaoImpl tenantDao = new TenantDaoImpl(conn);
+                            Tenant tenant = tenantDao.GetByUserID(user.GetUserID());
+                            SessionManager.setCurrentTenant(tenant);
+                        } else {
+                            SessionManager.setCurrentTenant(null);
+                        }
+                        if ("ADMIN".equalsIgnoreCase(role)) {
+                            App.setRoot("admin");
+                        } else {
+                            App.setRoot("tenant");
+                        }
                     } else {
-                        errorLabel.setText("Login failed: No tenant profile linked to this account.");
+                        errorLabel.setText("Invalid username or password.");
                     }
+                } else {
+                    errorLabel.setText("Invalid username or password.");
                 }
-            } else {
-                errorLabel.setText("Invalid username or password.");
+            } finally {
+                if (conn != null && !conn.isClosed()) {
+                    conn.close();
+                }
             }
+        } catch (RuntimeException e) {
+            if (e.getMessage() != null && e.getMessage().contains("Failed to connect to database")) {
+                errorLabel.setText("Database error: Could not initialize database. Check your MySQL server.");
+            } else {
+                errorLabel.setText("Database error: " + e.getMessage());
+            }
+            LOGGER.log(Level.SEVERE, "Login failed due to database runtime error.", e);
         } catch (Exception e) {
-            errorLabel.setText("Database error: " + e.getMessage());
-            e.printStackTrace();
+            errorLabel.setText("An unexpected error occurred: " + e.getMessage());
+            LOGGER.log(Level.SEVERE, "Login failed unexpectedly.", e);
         }
     }
 }

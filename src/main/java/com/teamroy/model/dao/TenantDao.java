@@ -1,6 +1,7 @@
 package com.teamroy.model.dao;
 
 import com.teamroy.model.entity.Tenant;
+
 import java.util.List;
 
 public interface TenantDao extends GenericDao<Tenant> {
@@ -14,6 +15,5 @@ public interface TenantDao extends GenericDao<Tenant> {
 
     List<Tenant> GetTenantsWithBalance();
 
-    boolean UpdateBalance(int tenantId, double amount);
-
+    double GetTotalBalance(int tenantId);
 }

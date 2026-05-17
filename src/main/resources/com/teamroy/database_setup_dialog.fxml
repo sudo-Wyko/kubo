@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.teamroy.controller.DatabaseSetupDialogController"
+      spacing="12" prefWidth="460"
+      styleClass="content-view dialog-root card">
+    <padding>
+        <Insets top="24" right="28" bottom="24" left="28"/>
+    </padding>
+
+    <Label text="Database setup" styleClass="dialog-title"/>
+    <Label text="Configure MySQL to initialize Kubo. Settings are saved locally after a successful connection."
+           wrapText="true" styleClass="card-subtitle"/>
+
+    <VBox spacing="6">
+        <Label text="Host"/>
+        <TextField fx:id="hostField" promptText="jdbc:mysql://localhost:3306" styleClass="form-control"/>
+    </VBox>
+
+    <VBox spacing="6">
+        <Label text="Username"/>
+        <TextField fx:id="usernameField" promptText="root" styleClass="form-control"/>
+    </VBox>
+
+    <VBox spacing="6">
+        <Label text="Password"/>
+        <PasswordField fx:id="passwordField" styleClass="form-control"/>
+    </VBox>
+
+    <VBox spacing="6">
+        <Label text="Database name"/>
+        <TextField fx:id="databaseField" promptText="kubo" styleClass="form-control"/>
+    </VBox>
+
+    <Label fx:id="errorLabel" styleClass="error-label" wrapText="true" visible="false" managed="false"/>
+
+    <HBox spacing="12" alignment="CENTER_RIGHT">
+        <Button text="Cancel" onAction="#cancel" styleClass="secondary-button"/>
+        <Button fx:id="connectButton" text="Connect &amp; Initialize" onAction="#connect"
+                styleClass="primary-button"/>
+    </HBox>
+</VBox>
