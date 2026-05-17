@@ -1,4 +1,4 @@
-﻿package com.teamroy.model.entity;
+package com.teamroy.model.entity;
 public class UserAccount {
     private int userId;
     private String username;

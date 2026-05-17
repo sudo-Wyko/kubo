@@ -1,4 +1,4 @@
-﻿package com.teamroy.controller;
+package com.teamroy.controller;
 import com.teamroy.CurrencyUtil;
 import com.teamroy.ConnectionManager;
 import com.teamroy.model.dao.LeaseDaoImpl;
@@ -236,9 +236,7 @@ public class AdminLeaseController {
         confirm.getButtonTypes().setAll(yes, no);
         confirm.showAndWait().ifPresent(answer -> {
             if (answer == yes) {
-                if (leaseDao.UpdateStatus(lease.GetLeaseID(), "TERMINATED")) {
-                    roomDao.DecrementOccupancy(lease.GetRoomID());
-                }
+                leaseDao.UpdateStatus(lease.GetLeaseID(), "TERMINATED");
                 reloadFromDatabase();
             }
         });

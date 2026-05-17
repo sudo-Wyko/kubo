@@ -1,8 +1,11 @@
-﻿package com.teamroy.controller;
+package com.teamroy.controller;
 import com.teamroy.CurrencyUtil;
 import com.teamroy.ConnectionManager;
+import com.teamroy.ExportFileNames;
+import com.teamroy.model.dao.LeaseDaoImpl;
 import com.teamroy.model.dao.PaymentDaoImpl;
 import com.teamroy.model.dao.TenantDaoImpl;
+import com.teamroy.model.entity.Lease;
 import com.teamroy.model.entity.Payment;
 import com.teamroy.model.entity.Tenant;
 import com.teamroy.service.ImportExportService;
@@ -71,9 +74,11 @@ public class AdminPaymentController {
     private Connection conn;
     private PaymentDaoImpl paymentDao;
     private TenantDaoImpl tenantDao;
+    private LeaseDaoImpl leaseDao;
     private PaymentService paymentService;
     private final ImportExportService importExportService = new ImportExportService();
     private final Map<Integer, String> tenantNameCache = new HashMap<>();
+    private final Map<Integer, Integer> leaseTenantCache = new HashMap<>();
     private Tenant createAllTenantsOption() {
         Tenant sentinel = new Tenant();
         sentinel.SetTenantID(-1);
@@ -87,6 +92,7 @@ public class AdminPaymentController {
             conn = ConnectionManager.getConnection();
             paymentDao = new PaymentDaoImpl(conn);
             tenantDao = new TenantDaoImpl(conn);
+            leaseDao = new LeaseDaoImpl(conn);
             paymentService = new PaymentService(conn);
         } catch (Exception ex) {
             System.err.println("Failed to initialize payments view: " + ex.getMessage());
@@ -137,7 +143,7 @@ public class AdminPaymentController {
     private void configureColumns() {
         colPaymentId.setCellValueFactory(cd -> new ReadOnlyObjectWrapper<>(cd.getValue().GetPaymentID()));
         colTenant.setCellValueFactory(cd -> new ReadOnlyObjectWrapper<>(
-                tenantNameCache.getOrDefault(cd.getValue().GetTenantID(), "Tenant #" + cd.getValue().GetTenantID())));
+                tenantNameForPayment(cd.getValue())));
         colAmount.setCellValueFactory(cd ->
                 new ReadOnlyObjectWrapper<>(CurrencyUtil.format(cd.getValue().GetAmountPaid())));
         colDate.setCellValueFactory(cd -> {
@@ -209,6 +215,7 @@ public class AdminPaymentController {
     }
     private void refreshTenantNames() {
         tenantNameCache.clear();
+        leaseTenantCache.clear();
         for (Tenant tenant : tenantDao.GetAllActive()) {
             tenantNameCache.put(tenant.GetTenantID(),
                     tenant.GetFirstName() + " " + tenant.GetLastName());
@@ -217,6 +224,40 @@ public class AdminPaymentController {
             tenantNameCache.putIfAbsent(tenant.GetTenantID(),
                     tenant.GetFirstName() + " " + tenant.GetLastName());
         }
+        for (Lease lease : leaseDao.GetAll()) {
+            leaseTenantCache.put(lease.GetLeaseID(), lease.GetTenantID());
+        }
+    }
+
+    private String tenantNameForPayment(Payment payment) {
+        if (payment == null) {
+            return "";
+        }
+        int tenantId = leaseTenantCache.getOrDefault(payment.GetLeaseID(), -1);
+        if (tenantId < 0) {
+            Lease lease = leaseDao.GetByID(payment.GetLeaseID());
+            if (lease != null) {
+                tenantId = lease.GetTenantID();
+                leaseTenantCache.put(payment.GetLeaseID(), tenantId);
+            }
+        }
+        return tenantNameCache.getOrDefault(tenantId, "Tenant #" + tenantId);
+    }
+
+    private int tenantIdForPayment(Payment payment) {
+        if (payment == null) {
+            return -1;
+        }
+        int tenantId = leaseTenantCache.getOrDefault(payment.GetLeaseID(), -1);
+        if (tenantId >= 0) {
+            return tenantId;
+        }
+        Lease lease = leaseDao.GetByID(payment.GetLeaseID());
+        if (lease == null) {
+            return -1;
+        }
+        leaseTenantCache.put(payment.GetLeaseID(), lease.GetTenantID());
+        return lease.GetTenantID();
     }
     private List<Payment> getFilteredPayments() {
         return applyFilters(new ArrayList<>(paymentDao.GetAll()));
@@ -226,7 +267,7 @@ public class AdminPaymentController {
         Tenant tenantSelection = tenantFilterCombo.getSelectionModel().getSelectedItem();
         if (tenantSelection != null && tenantSelection.GetTenantID() >= 0) {
             final int tenantId = tenantSelection.GetTenantID();
-            list = list.stream().filter(p -> p.GetTenantID() == tenantId).collect(Collectors.toList());
+            list = list.stream().filter(p -> tenantIdForPayment(p) == tenantId).collect(Collectors.toList());
         }
         String statusSelection = statusFilterCombo.getSelectionModel().getSelectedItem();
         if (statusSelection != null && !"ALL".equals(statusSelection)) {
@@ -277,8 +318,7 @@ public class AdminPaymentController {
             return;
         }
         if ("VERIFIED".equalsIgnoreCase(newStatus) && !"VERIFIED".equalsIgnoreCase(payment.GetStatus())) {
-            paymentService.verifyPayment(payment.GetPaymentID(), payment.GetTenantID(),
-                    payment.GetAmountPaid());
+            paymentService.verifyPayment(payment.GetPaymentID());
         } else {
             paymentDao.UpdateStatus(payment.GetPaymentID(), newStatus);
         }
@@ -293,6 +333,7 @@ public class AdminPaymentController {
         FileChooser chooser = new FileChooser();
         chooser.setTitle("Export payments");
         chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV", "*.csv"));
+        chooser.setInitialFileName(ExportFileNames.paymentsCsv());
         File dest = chooser.showSaveDialog(stage);
         if (dest == null) {
             return;
@@ -317,6 +358,7 @@ public class AdminPaymentController {
         FileChooser chooser = new FileChooser();
         chooser.setTitle("Export payments");
         chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("JSON", "*.json"));
+        chooser.setInitialFileName(ExportFileNames.paymentsJson());
         File dest = chooser.showSaveDialog(stage);
         if (dest == null) {
             return;
@@ -339,7 +381,9 @@ public class AdminPaymentController {
             Parent root = loader.load();
             AddPaymentDialogController controller = loader.getController();
             controller.configureAdmin(conn, this::refreshTable);
-            controller.setTenants(tenantDao.GetAllActive());
+            controller.setLeases(leaseDao.GetAll().stream()
+                    .filter(l -> !"TERMINATED".equalsIgnoreCase(l.GetStatus()))
+                    .collect(Collectors.toList()));
             Stage stage = new Stage();
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.setTitle("Add payment");

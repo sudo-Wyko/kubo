@@ -1,6 +1,8 @@
-﻿package com.teamroy.controller;
+package com.teamroy.controller;
 import com.teamroy.CurrencyUtil;
 import com.teamroy.ConnectionManager;
+import com.teamroy.ExportFileNames;
+import com.teamroy.model.dao.DaoException;
 import com.teamroy.model.dao.LeaseDaoImpl;
 import com.teamroy.model.dao.MaintenanceRequestDaoImpl;
 import com.teamroy.model.dao.RoomDaoImpl;
@@ -27,7 +29,10 @@ import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import javafx.scene.control.SplitPane;
 import javafx.scene.control.ToggleButton;
+import javafx.scene.control.Alert;
+import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -86,6 +91,12 @@ public class AdminTenantController {
     @FXML
     private Label detailLeaseStatus;
     @FXML
+    private SplitPane tenantSplitPane;
+    @FXML
+    private javafx.scene.control.ScrollPane detailScrollPane;
+    @FXML
+    private VBox detailPanel;
+    @FXML
     private ToggleButton archivedToggle;
     @FXML
     private TableView<Tenant> archivedTable;
@@ -138,6 +149,7 @@ public class AdminTenantController {
         roomFilterCombo.getSelectionModel().selectedItemProperty().addListener((obs, o, n) -> reloadMainTable());
         statusFilterCombo.getSelectionModel().selectedItemProperty().addListener((obs, o, n) -> reloadMainTable());
         tenantTable.getSelectionModel().selectedItemProperty().addListener((obs, o, n) -> onTenantSelected(n));
+        hideDetailPanel();
         archivedToggle.selectedProperty().addListener((obs, o, shown) -> {
             archivedTable.setVisible(shown);
             archivedTable.setManaged(shown);
@@ -236,8 +248,12 @@ public class AdminTenantController {
         Lease lease = pickLease(tenant);
         return lease == null ? "\u2014" : lease.GetEndDate().toString();
     }
+    private double tenantBalance(Tenant tenant) {
+        return tenantDao.GetTotalBalance(tenant.GetTenantID());
+    }
+
     private String rentStatus(Tenant tenant) {
-        return tenant.GetTotalBalance() <= 0.01 ? "Paid" : "Unpaid";
+        return tenantBalance(tenant) <= 0.01 ? "Paid" : "Unpaid";
     }
     private String initials(Tenant tenant) {
         String f = tenant.GetFirstName() == null ? "" : tenant.GetFirstName();
@@ -260,7 +276,7 @@ public class AdminTenantController {
         if (st == null || "ALL".equalsIgnoreCase(st)) {
             return true;
         }
-        boolean paid = tenant.GetTotalBalance() <= 0.01;
+        boolean paid = tenantBalance(tenant) <= 0.01;
         if ("PAID".equalsIgnoreCase(st)) {
             return paid;
         }
@@ -297,8 +313,29 @@ public class AdminTenantController {
                 .collect(Collectors.toList());
         archivedTable.setItems(FXCollections.observableArrayList(archived));
     }
+    private void hideDetailPanel() {
+        if (detailScrollPane != null) {
+            detailScrollPane.setVisible(false);
+            detailScrollPane.setManaged(false);
+        }
+        if (tenantSplitPane != null) {
+            tenantSplitPane.setDividerPositions(1.0);
+        }
+    }
+
+    private void showDetailPanel() {
+        if (detailScrollPane != null) {
+            detailScrollPane.setVisible(true);
+            detailScrollPane.setManaged(true);
+        }
+        if (tenantSplitPane != null) {
+            tenantSplitPane.setDividerPositions(0.62);
+        }
+    }
+
     private void onTenantSelected(Tenant tenant) {
         if (tenant == null) {
+            hideDetailPanel();
             detailName.setText("\u2014");
             detailEmail.setText("");
             detailContact.setText("");
@@ -312,13 +349,16 @@ public class AdminTenantController {
             detailLeaseStatus.setText("Lease status: \u2014");
             return;
         }
+        
+        showDetailPanel();
         detailInitials.setText(initials(tenant));
         detailName.setText(tenant.GetFirstName() + " " + tenant.GetLastName());
         detailEmail.setText(tenant.GetEmail());
         detailContact.setText(tenant.GetContactNumber());
         detailAddedDate.setText("Added: \u2014");
-        detailBalance.setText("Total Balance: " + CurrencyUtil.format(tenant.GetTotalBalance()));
+        detailBalance.setText("Total Balance: " + CurrencyUtil.format(tenantBalance(tenant)));
         detailRentStatus.setText("Rent status: " + rentStatus(tenant));
+        
         Lease lease = pickLease(tenant);
         if (lease == null) {
             detailNextDue.setText("Next due: \u2014");
@@ -327,12 +367,49 @@ public class AdminTenantController {
             detailLeaseStatus.setText("Lease status: \u2014");
             return;
         }
+        
         Room room = roomDao.GetByID(lease.GetRoomID());
         detailLeaseStatus.setText("Lease status: " + lease.GetStatus());
         detailRoomNumber.setText("Room: " + (room == null ? ("#" + lease.GetRoomID()) : room.GetRoomNumber()));
         detailRoomType.setText("Type: " + (room == null ? "\u2014" : room.GetRoomType()));
-        LocalDate nextDue = lease.GetStartDate().plusMonths(1);
-        detailNextDue.setText("Next due: " + MDFMT.format(nextDue));
+        
+        LocalDate nextDue = null;
+
+        // Check if tenant is completely paid up
+        if (tenantBalance(tenant) <= 0.01) {
+            // Explicitly set to null to signify no outstanding upcoming balance date
+            nextDue = null; 
+        } else {
+            // Tenant owes money! Find the oldest outstanding RENT charge (past or present)
+            String sql = "SELECT c.due_date FROM CHARGE c " +
+                         "JOIN LEASE l ON c.lease_id = l.lease_id " +
+                         "WHERE l.tenant_id = ? AND c.charge_type = 'RENT' " +
+                         "ORDER BY c.due_date ASC LIMIT 1";
+                         
+            try (java.sql.PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setInt(1, tenant.GetTenantID());
+                try (java.sql.ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        nextDue = rs.getDate("due_date").toLocalDate();
+                    }
+                }
+            } catch (java.sql.SQLException e) {
+                e.printStackTrace();
+            }
+            
+            // Fallback if they owe money but no charges exist yet in the database for this lease
+            if (nextDue == null) {
+                nextDue = lease.GetStartDate().plusMonths(1);
+            }
+        }
+
+        // Render based on presence of a valid due date
+        if (nextDue == null) {
+            detailNextDue.setText("Next due: \u2014");
+        } else {
+            detailNextDue.setText("Next due: " + MDFMT.format(nextDue));
+        }
+        
         tenantTable.refresh();
     }
     @FXML
@@ -366,7 +443,9 @@ public class AdminTenantController {
             Stage stage = new Stage();
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.setTitle(edit == null ? "Add tenant" : "Edit tenant");
-            stage.setScene(new Scene(root));
+            Scene scene = new Scene(root);
+            DialogUiHelper.applyStyles(scene);
+            stage.setScene(scene);
             stage.showAndWait();
             reloadMainTable();
             if (Boolean.TRUE.equals(archivedToggle.isSelected())) {
@@ -377,8 +456,11 @@ public class AdminTenantController {
                 Tenant refreshed = tenantDao.GetByID(current.GetTenantID());
                 onTenantSelected(refreshed);
             }
+        } catch (DaoException ex) {
+            showAlert(Alert.AlertType.ERROR, "Tenant error", ex.getMessage());
         } catch (Exception ex) {
             ex.printStackTrace();
+            showAlert(Alert.AlertType.ERROR, "Tenant error", ex.getMessage());
         }
     }
     @FXML
@@ -408,6 +490,7 @@ public class AdminTenantController {
             FileChooser chooser = new FileChooser();
             chooser.setTitle("Export tenants CSV");
             chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV Files", "*.csv"));
+            chooser.setInitialFileName(ExportFileNames.tenantsCsv());
             Stage stage = (Stage) tenantTable.getScene().getWindow();
             File dest = chooser.showSaveDialog(stage);
             if (dest == null) {
@@ -441,6 +524,15 @@ public class AdminTenantController {
             }
         } catch (Exception ex) {
             ex.printStackTrace();
+            showAlert(Alert.AlertType.ERROR, "Import failed", ex.getMessage());
         }
+    }
+
+    private void showAlert(Alert.AlertType type, String title, String message) {
+        Alert alert = new Alert(type);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message == null ? "" : message);
+        alert.showAndWait();
     }
 }

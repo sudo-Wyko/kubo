@@ -1,4 +1,4 @@
-﻿package com.teamroy.model.dao;
+package com.teamroy.model.dao;
 import com.teamroy.model.entity.Announcement;
 import java.util.List;
 import java.time.LocalDateTime;

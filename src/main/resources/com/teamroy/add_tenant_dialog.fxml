@@ -12,7 +12,7 @@
     <TextField fx:id="firstNameField" styleClass="form-control"/>
     <Label text="Last name *"/>
     <TextField fx:id="lastNameField" styleClass="form-control"/>
-    <Label text="Contact number"/>
+    <Label text="Contact number *"/>
     <TextField fx:id="contactField" styleClass="form-control"/>
     <Label text="Email"/>
     <TextField fx:id="emailField" styleClass="form-control"/>

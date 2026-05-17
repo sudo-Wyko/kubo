@@ -1,4 +1,4 @@
-﻿package com.teamroy.service;
+package com.teamroy.service;
 import com.teamroy.model.dao.LeaseDao;
 import com.teamroy.model.dao.LeaseDaoImpl;
 import com.teamroy.model.entity.Lease;

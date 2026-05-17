@@ -36,9 +36,11 @@
                     styleClass="nav-button"/>
 
             <Region VBox.vgrow="ALWAYS"/>
-
+                <Button fx:id="btnAccount" text="⚙️  Edit Account" onAction="#LoadAccountView" maxWidth="Infinity" styleClass="nav-button"/>
             <Button fx:id="btnLogout" text="Logout" onAction="#handleLogout" maxWidth="Infinity"
                     styleClass="logout-button"/>
+
+        
         </VBox>
     </left>
 

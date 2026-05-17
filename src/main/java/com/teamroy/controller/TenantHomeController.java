@@ -1,4 +1,4 @@
-﻿package com.teamroy.controller;
+package com.teamroy.controller;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.layout.*;
@@ -54,7 +54,9 @@ public class TenantHomeController {
         });
     }
     private void loadDashboardData(int tenantId) {
-        String tenantSql = "SELECT first_name, total_balance FROM TENANT WHERE tenant_id = ?";
+        String tenantSql = "SELECT t.first_name, COALESCE(SUM(l.balance), 0) AS total_balance "
+                + "FROM TENANT t LEFT JOIN LEASE l ON t.tenant_id = l.tenant_id WHERE t.tenant_id = ? "
+                + "GROUP BY t.tenant_id, t.first_name";
         try (PreparedStatement ps = conn.prepareStatement(tenantSql)) {
             ps.setInt(1, tenantId);
             try (ResultSet rs = ps.executeQuery()) {

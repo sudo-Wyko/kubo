@@ -1,5 +1,7 @@
-﻿package com.teamroy.model.entity;
+package com.teamroy.model.entity;
+
 import java.time.LocalDate;
+
 public class Lease {
     private int leaseId;
     private int tenantId;
@@ -7,9 +9,12 @@ public class Lease {
     private LocalDate startDate;
     private LocalDate endDate;
     private double monthlyRent;
-    private String status; 
+    private double balance;
+    private String status;
+
     public Lease() {
     }
+
     public Lease(int tenantId, int roomId, LocalDate startDate, LocalDate endDate, double monthlyRent, String status) {
         this.tenantId = tenantId;
         this.roomId = roomId;
@@ -18,45 +23,67 @@ public class Lease {
         this.monthlyRent = monthlyRent;
         this.status = status;
     }
+
     public int GetLeaseID() {
         return leaseId;
     }
+
     public int GetTenantID() {
         return tenantId;
     }
+
     public int GetRoomID() {
         return roomId;
     }
+
     public LocalDate GetStartDate() {
         return startDate;
     }
+
     public LocalDate GetEndDate() {
         return endDate;
     }
+
     public double GetMonthlyRent() {
         return monthlyRent;
     }
+
+    public double GetBalance() {
+        return balance;
+    }
+
     public String GetStatus() {
         return status;
     }
+
     public void SetLeaseID(int leaseId) {
         this.leaseId = leaseId;
     }
+
     public void SetTenantID(int tenantId) {
         this.tenantId = tenantId;
     }
+
     public void SetRoomID(int roomId) {
         this.roomId = roomId;
     }
+
     public void SetStartDate(LocalDate startDate) {
         this.startDate = startDate;
     }
+
     public void SetEndDate(LocalDate endDate) {
         this.endDate = endDate;
     }
+
     public void SetMonthlyRent(double monthlyRent) {
         this.monthlyRent = monthlyRent;
     }
+
+    public void SetBalance(double balance) {
+        this.balance = balance;
+    }
+
     public void SetStatus(String status) {
         this.status = status;
     }

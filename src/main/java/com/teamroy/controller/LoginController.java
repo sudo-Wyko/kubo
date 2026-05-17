@@ -1,4 +1,4 @@
-﻿package com.teamroy.controller;
+package com.teamroy.controller;
 import com.teamroy.App;
 import com.teamroy.ConnectionManager;
 import com.teamroy.PasswordUtil;

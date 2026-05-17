@@ -20,17 +20,14 @@
         
         <Region prefHeight="10"/>
 
+        <Label text="Registered Contact Number" style="-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #334155;"/>
+        <TextField fx:id="contactField" promptText="e.g., 09123456789" style="-fx-pref-height: 35px; -fx-font-size: 13px;"/>
+
         <Label text="Username" style="-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #334155;"/>
         <TextField fx:id="usernameField" promptText="Choose a username (3-50 characters)" style="-fx-pref-height: 35px; -fx-font-size: 13px;"/>
         
         <Label text="Password" style="-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #334155;"/>
-        <PasswordField fx:id="passwordField" promptText="Minimum 6 characters" style="-fx-pref-height: 35px; -fx-font-size: 13px;"/>
-        
-        <Label text="First Name" style="-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #334155;"/>
-        <TextField fx:id="firstNameField" promptText="First name" style="-fx-pref-height: 35px; -fx-font-size: 13px;"/>
-        
-        <Label text="Last Name" style="-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #334155;"/>
-        <TextField fx:id="lastNameField" promptText="Last name" style="-fx-pref-height: 35px; -fx-font-size: 13px;"/>
+        <PasswordField fx:id="passwordField" promptText="Minimum 3 characters" style="-fx-pref-height: 35px; -fx-font-size: 13px;"/>
         
         <Label fx:id="errorLabel" text="" style="-fx-text-fill: #ef4444; -fx-font-size: 12px; -fx-wrap-text: true;"/>
 

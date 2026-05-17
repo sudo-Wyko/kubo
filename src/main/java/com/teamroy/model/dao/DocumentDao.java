@@ -1,4 +1,4 @@
-﻿package com.teamroy.model.dao;
+package com.teamroy.model.dao;
 import com.teamroy.model.entity.Document;
 import java.util.List;
 public interface DocumentDao extends GenericDao<Document> {

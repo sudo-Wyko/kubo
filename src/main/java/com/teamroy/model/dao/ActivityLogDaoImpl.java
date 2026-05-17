@@ -1,4 +1,5 @@
-﻿package com.teamroy.model.dao;
+package com.teamroy.model.dao;
+
 import com.teamroy.model.entity.ActivityLog;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -20,7 +21,7 @@ public class ActivityLogDaoImpl implements ActivityLogDao {
                     entity.SetActivityID(rs.getInt(1));
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw new DaoException("Could not create activity log: " + e.getMessage(), e);
         }
     }
     @Override

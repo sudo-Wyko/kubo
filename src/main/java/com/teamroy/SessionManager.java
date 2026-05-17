@@ -1,4 +1,4 @@
-﻿package com.teamroy;
+package com.teamroy;
 import com.teamroy.model.entity.Tenant;
 import com.teamroy.model.entity.UserAccount;
 public final class SessionManager {

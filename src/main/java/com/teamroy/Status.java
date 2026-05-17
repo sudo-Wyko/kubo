@@ -1,4 +1,4 @@
-﻿package com.teamroy;
+package com.teamroy;
 public final class Status {
     private Status() {}
     public static final String LEASE_ACTIVE = "ACTIVE";

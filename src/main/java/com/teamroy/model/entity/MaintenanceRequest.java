@@ -1,4 +1,4 @@
-﻿package com.teamroy.model.entity;
+package com.teamroy.model.entity;
 import java.time.LocalDateTime;
 public class MaintenanceRequest {
     private int requestId;

@@ -1,4 +1,4 @@
-﻿package com.teamroy.controller;
+package com.teamroy.controller;
 import com.teamroy.ConnectionManager;
 import com.teamroy.model.dao.MaintenanceRequestDaoImpl;
 import com.teamroy.model.dao.RoomDaoImpl;
@@ -30,11 +30,7 @@ public class AdminMaintenanceController {
     @FXML
     private DatePicker dateFilterPicker;
     @FXML
-    private VBox kanbanTotalBody;
-    @FXML
     private VBox kanbanOpenBody;
-    @FXML
-    private VBox kanbanUrgentBody;
     @FXML
     private VBox kanbanCompletedBody;
     private Connection conn;
@@ -99,17 +95,8 @@ public class AdminMaintenanceController {
             }
         });
     }
-    private boolean isUrgent(MaintenanceRequest mr) {
-        return "NEW".equalsIgnoreCase(mr.GetStatus())
-                && mr.GetReportedDate() != null
-                && mr.GetReportedDate().isBefore(LocalDateTime.now().minusDays(3));
-    }
     private boolean isResolved(MaintenanceRequest mr) {
         return "RESOLVED".equalsIgnoreCase(mr.GetStatus());
-    }
-    private boolean isInProgress(MaintenanceRequest mr) {
-        String status = mr.GetStatus();
-        return "IN-PROGRESS".equalsIgnoreCase(status) || "IN_PROGRESS".equalsIgnoreCase(status);
     }
     private List<MaintenanceRequest> applyFilters(List<MaintenanceRequest> source) {
         List<MaintenanceRequest> list = new ArrayList<>(source);
@@ -163,54 +150,110 @@ public class AdminMaintenanceController {
         return normalized.substring(0, 137) + "...";
     }
     private Label buildStatusBadge(String status) {
-        Label badge = new Label(status);
-        String color = "#334155";
-        if ("NEW".equalsIgnoreCase(status)) {
-            color = "#2563eb";
-        } else if ("IN-PROGRESS".equalsIgnoreCase(status) || "IN_PROGRESS".equalsIgnoreCase(status)) {
-            color = "#ca8a04";
-        } else if ("RESOLVED".equalsIgnoreCase(status)) {
-            color = "#15803d";
-        }
-        badge.setStyle("-fx-background-color: " + color
-                + "; -fx-text-fill: white; -fx-padding: 4 10; -fx-background-radius: 10;");
-        return badge;
+    Label badge = new Label(status);
+    badge.getStyleClass().add("status-badge");
+
+    if ("NEW".equalsIgnoreCase(status)) {
+        badge.getStyleClass().add("ticket-status-open");
+
+    } else if ("IN-PROGRESS".equalsIgnoreCase(status)
+            || "IN_PROGRESS".equalsIgnoreCase(status)) {
+
+        badge.getStyleClass().add("ticket-status-urgent");
+
+    } else if ("RESOLVED".equalsIgnoreCase(status)) {
+
+        badge.getStyleClass().add("ticket-status-completed");
     }
+
+    return badge;
+    }
+
     private VBox buildCard(MaintenanceRequest mr) {
-        VBox card = new VBox(8);
-        card.setStyle(
-                "-fx-border-color: #334155; -fx-border-radius: 8; -fx-background-color: #111827; -fx-background-radius: 8; -fx-padding: 12;");
-        Label title = new Label("Request #" + mr.GetRequestID());
-        title.setStyle("-fx-text-fill: white; -fx-font-weight: bold;");
-        String tenantName = tenantNameCache.getOrDefault(mr.GetTenantID(), "Tenant #" + mr.GetTenantID());
-        Label tenantLabel = new Label(tenantName);
-        tenantLabel.setStyle("-fx-text-fill: #cbd5f5;");
-        Label roomLabel = new Label(resolveRoomLabel(mr));
-        roomLabel.setStyle("-fx-text-fill: #94a3b8;");
-        Label description = new Label(truncateDescription(mr.GetReportDescription()));
-        description.setWrapText(true);
-        description.setMaxHeight(48);
-        description.setStyle("-fx-text-fill: #e2e8f0;");
-        String dateText = mr.GetReportedDate() == null ? "\u2014"
-                : mr.GetReportedDate().toLocalDate().toString();
-        Label dateLabel = new Label("Reported: " + dateText);
-        dateLabel.setStyle("-fx-text-fill: #94a3b8; -fx-font-size: 11px;");
-        HBox statusRow = new HBox(10);
-        statusRow.getChildren().add(buildStatusBadge(mr.GetStatus()));
-        ComboBox<String> statusPicker = new ComboBox<>(
-                FXCollections.observableArrayList("NEW", "IN-PROGRESS", "RESOLVED"));
-        statusPicker.setValue(mr.GetStatus());
-        statusPicker.valueProperty().addListener((obs, oldVal, newVal) -> {
-            if (oldVal == null || newVal == null || newVal.equals(oldVal)) {
-                return;
-            }
-            maintenanceDao.UpdateStatus(mr.GetRequestID(), newVal);
-            reloadKanban();
-        });
-        statusRow.getChildren().add(statusPicker);
-        card.getChildren().addAll(title, tenantLabel, roomLabel, description, dateLabel, statusRow);
-        return card;
+
+    VBox card = new VBox(10);
+
+    // USE CSS CLASSES INSTEAD OF INLINE STYLES
+    card.getStyleClass().add("ticket-card");
+
+    Label title = new Label("Request #" + mr.GetRequestID());
+    title.getStyleClass().add("ticket-card-title");
+
+    String tenantName = tenantNameCache.getOrDefault(
+            mr.GetTenantID(),
+            "Tenant #" + mr.GetTenantID()
+    );
+
+    Label tenantLabel = new Label(tenantName);
+    tenantLabel.getStyleClass().add("ticket-card-subtitle");
+
+    Label roomLabel = new Label(resolveRoomLabel(mr));
+    roomLabel.getStyleClass().add("ticket-card-subtitle");
+
+    Label description = new Label(
+            truncateDescription(mr.GetReportDescription())
+    );
+
+    description.setWrapText(true);
+    description.getStyleClass().add("ticket-card-description");
+
+    String dateText = mr.GetReportedDate() == null
+            ? "\u2014"
+            : mr.GetReportedDate().toLocalDate().toString();
+
+    Label dateLabel = new Label("Reported: " + dateText);
+    dateLabel.getStyleClass().add("ticket-card-subtitle");
+
+    HBox statusRow = new HBox(10);
+
+    Label badge = buildStatusBadge(mr.GetStatus());
+
+    ComboBox<String> statusPicker = new ComboBox<>(
+            FXCollections.observableArrayList(
+                    "NEW",
+                    "IN-PROGRESS",
+                    "RESOLVED"
+            )
+    );
+
+    statusPicker.setValue(mr.GetStatus());
+
+    // Optional but recommended
+    statusPicker.getStyleClass().add("form-control");
+
+    statusPicker.valueProperty().addListener((obs, oldVal, newVal) -> {
+
+        if (oldVal == null
+                || newVal == null
+                || newVal.equals(oldVal)) {
+            return;
+        }
+
+        maintenanceDao.UpdateStatus(
+                mr.GetRequestID(),
+                newVal
+        );
+
+        reloadKanban();
+    });
+
+    statusRow.getChildren().addAll(
+            badge,
+            statusPicker
+    );
+
+    card.getChildren().addAll(
+            title,
+            tenantLabel,
+            roomLabel,
+            description,
+            dateLabel,
+            statusRow
+    );
+
+    return card;
     }
+
     private void populateColumn(VBox body, List<MaintenanceRequest> items) {
         body.getChildren().clear();
         for (MaintenanceRequest mr : items) {
@@ -218,20 +261,25 @@ public class AdminMaintenanceController {
         }
     }
     private void reloadKanban() {
-        if (maintenanceDao == null) {
-            return;
-        }
-        refreshTenantNames();
-        List<MaintenanceRequest> filtered = applyFilters(maintenanceDao.GetAll());
-        List<MaintenanceRequest> urgent = filtered.stream().filter(this::isUrgent).collect(Collectors.toList());
-        List<MaintenanceRequest> completed = filtered.stream().filter(this::isResolved).collect(Collectors.toList());
-        List<MaintenanceRequest> open = filtered.stream()
-                .filter(mr -> !isResolved(mr))
-                .filter(mr -> isInProgress(mr) || ("NEW".equalsIgnoreCase(mr.GetStatus()) && !isUrgent(mr)))
-                .collect(Collectors.toList());
-        populateColumn(kanbanTotalBody, filtered);
-        populateColumn(kanbanOpenBody, open);
-        populateColumn(kanbanUrgentBody, urgent);
-        populateColumn(kanbanCompletedBody, completed);
+    if (maintenanceDao == null) {
+        return;
+    }
+    refreshTenantNames();
+    
+    // 1. Fetch filtered source data
+    List<MaintenanceRequest> filtered = applyFilters(maintenanceDao.GetAll());
+    
+    // 2. Separate into Completed ("RESOLVED") vs Open everything else ("NEW", "IN-PROGRESS")
+    List<MaintenanceRequest> completed = filtered.stream()
+            .filter(this::isResolved)
+            .collect(Collectors.toList());
+            
+    List<MaintenanceRequest> open = filtered.stream()
+            .filter(mr -> !isResolved(mr))
+            .collect(Collectors.toList());
+            
+    // 3. Populate only the remaining columns
+    populateColumn(kanbanOpenBody, open);
+    populateColumn(kanbanCompletedBody, completed);
     }
 }

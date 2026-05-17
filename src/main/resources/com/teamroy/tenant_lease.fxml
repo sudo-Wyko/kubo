@@ -1,54 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
 <?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.layout.*?>
+
 <ScrollPane fitToWidth="true" styleClass="main-scroll-pane"
             xmlns="http://javafx.com/javafx/17"
             xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="com.teamroy.controller.TenantLeaseController">
 
-    <VBox spacing="20" styleClass="content-view">
+    <VBox fx:id="leaseListContainer" spacing="24" styleClass="content-view">
         <padding>
             <Insets top="30" right="30" bottom="30" left="30"/>
         </padding>
 
-        <Label text="Lease Details" styleClass="payments-header"/>
-
-        <HBox spacing="20">
-
-            <!-- Document placeholder -->
-            <StackPane styleClass="lease-document-pane" HBox.hgrow="ALWAYS" minHeight="400">
-                <VBox alignment="CENTER" spacing="8">
-                    <Label text="&#128196;" styleClass="lease-doc-icon"/>
-                    <Label text="Lease Agreement" styleClass="card-title"/>
-                    <Label text="No document on file" styleClass="card-subtitle"/>
-                </VBox>
-            </StackPane>
-
-            <!-- Stat cards -->
-            <VBox spacing="20" prefWidth="250">
-
-                <VBox styleClass="lease-stat-card">
-                    <Label text="Start Date" styleClass="lease-stat-label"/>
-                    <Label fx:id="lblStartDate" text="..." styleClass="lease-stat-value"/>
-                </VBox>
-
-                <VBox styleClass="lease-stat-card">
-                    <Label text="End Date" styleClass="lease-stat-label"/>
-                    <Label fx:id="lblEndDate" text="..." styleClass="lease-stat-value"/>
-                </VBox>
-
-                <VBox styleClass="lease-stat-card">
-                    <Label text="Status" styleClass="lease-stat-label"/>
-                    <Label fx:id="lblStatus" text="..." styleClass="lease-stat-value"/>
-                </VBox>
-
-                <VBox styleClass="lease-stat-card">
-                    <Label text="Monthly Rent" styleClass="lease-stat-label"/>
-                    <Label fx:id="lblMonthlyRent" text="..." styleClass="lease-stat-value"/>
-                </VBox>
-
-            </VBox>
-        </HBox>
+        <Label fx:id="headerLabel" text="Lease Details" styleClass="payments-header"/>
+        <Label fx:id="emptyStateLabel" text="No lease history on file."
+               styleClass="card-subtitle" visible="false" managed="false"/>
     </VBox>
 </ScrollPane>

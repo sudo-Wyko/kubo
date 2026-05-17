@@ -1,4 +1,5 @@
-﻿package com.teamroy.model.dao;
+package com.teamroy.model.dao;
+
 import com.teamroy.model.entity.UserAccount;
 import java.util.*;
 import java.sql.*;
@@ -18,10 +19,12 @@ public class UserAccountDaoImpl implements UserAccountDao {
             try (ResultSet generatedKeys = ps.getGeneratedKeys()) {
                 if (generatedKeys.next()) {
                     entity.SetUserID(generatedKeys.getInt(1));
+                } else {
+                    throw new DaoException("User account insert succeeded but no generated key was returned.");
                 }
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw new DaoException("Could not create user account: " + e.getMessage(), e);
         }
     }
     @Override

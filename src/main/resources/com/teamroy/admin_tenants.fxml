@@ -25,7 +25,7 @@
     </top>
 
     <center>
-        <SplitPane dividerPositions="0.6" styleClass="split-pane-clean">
+        <SplitPane fx:id="tenantSplitPane" dividerPositions="1.0" styleClass="split-pane-clean">
             <VBox spacing="10" style="-fx-padding: 0 8 0 0;" styleClass="card">
                 <Label text="Active tenants" styleClass="card-title"/>
                 <TableView fx:id="tenantTable" prefHeight="520" VBox.vgrow="ALWAYS" styleClass="table-clean">
@@ -41,7 +41,8 @@
                 </TableView>
             </VBox>
 
-            <ScrollPane fitToWidth="true" styleClass="main-scroll-pane">
+            <ScrollPane fx:id="detailScrollPane" fitToWidth="true" visible="false" managed="false"
+                        styleClass="main-scroll-pane">
                 <VBox fx:id="detailPanel" spacing="12" styleClass="card">
                     <HBox spacing="14" alignment="TOP_LEFT">
                         <StackPane prefWidth="80" prefHeight="80"

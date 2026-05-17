@@ -10,9 +10,9 @@
             styleClass="content-view">
 
     <left>
-        <VBox spacing="4" prefWidth="220.0" styleClass="sidebar">
+        <VBox spacing="10" prefWidth="250.0" styleClass="sidebar">
             <padding>
-                <Insets top="32" right="12" bottom="32" left="12"/>
+                <Insets top="40" right="20" bottom="40" left="20"/>
             </padding>
 
             <!-- App / branding label -->
@@ -22,21 +22,25 @@
                 </VBox.margin>
             </Label>
 
-            <Button fx:id="btnHome"        text="🏠  Home"                 onAction="#LoadHomeView"        maxWidth="Infinity" styleClass="nav-button"/>
-            <Button fx:id="btnRooms"       text="🚪  Rooms"                onAction="#LoadRoomsView"       maxWidth="Infinity" styleClass="nav-button"/>
-            <Button fx:id="btnPayments"    text="💳  Payments"             onAction="#LoadPaymentsView"    maxWidth="Infinity" styleClass="nav-button"/>
-            <Button fx:id="btnLease"       text="📄  Lease Details"        onAction="#LoadLeaseView"       maxWidth="Infinity" styleClass="nav-button"/>
-            <Button fx:id="btnMaintenance" text="🔧  Maintenance Requests" onAction="#LoadMaintenanceView" maxWidth="Infinity" styleClass="nav-button"/>
+            <Button fx:id="btnHome"        text="Home"                 onAction="#LoadHomeView"        maxWidth="Infinity" styleClass="nav-button"/>
+            <Button fx:id="btnRooms"       text="Rooms"                onAction="#LoadRoomsView"       maxWidth="Infinity" styleClass="nav-button"/>
+            <Button fx:id="btnPayments"    text="Payments"             onAction="#LoadPaymentsView"    maxWidth="Infinity" styleClass="nav-button"/>
+            <Button fx:id="btnLease"       text="Lease Details"        onAction="#LoadLeaseView"       maxWidth="Infinity" styleClass="nav-button"/>
+            <Button fx:id="btnMaintenance" text="Maintenance Requests" onAction="#LoadMaintenanceView" maxWidth="Infinity" styleClass="nav-button"/>
 
             <Region VBox.vgrow="ALWAYS"/>
 
-            <Button text="⚙️  Edit Account" onAction="#LoadAccountView" maxWidth="Infinity" styleClass="nav-button"/>
+            <Button fx:id="btnAccount" text="⚙️  Edit Account" onAction="#LoadAccountView" maxWidth="Infinity" styleClass="nav-button"/>
             <Button text="Logout"           onAction="#handleLogout"    maxWidth="Infinity" styleClass="logout-button"/>
         </VBox>
     </left>
 
     <center>
-        <StackPane fx:id="contentArea" styleClass="content-view"/>
+        <StackPane fx:id="contentArea" styleClass="content-view">
+            <padding>
+                <Insets top="20" right="20" bottom="20" left="20"/>
+            </padding>
+        </StackPane>
     </center>
 
 </BorderPane>

@@ -1,4 +1,5 @@
-﻿package com.teamroy.model.dao;
+package com.teamroy.model.dao;
+
 import com.teamroy.model.entity.Announcement;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -16,11 +17,14 @@ public class AnnouncementDaoImpl implements AnnouncementDao {
             ps.setString(2, entity.GetMessage());
             ps.executeUpdate();
             try (ResultSet rs = ps.getGeneratedKeys()) {
-                if (rs.next())
+                if (rs.next()) {
                     entity.SetAnnouncementID(rs.getInt(1));
+                } else {
+                    throw new DaoException("Announcement insert succeeded but no generated key was returned.");
+                }
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw new DaoException("Could not create announcement: " + e.getMessage(), e);
         }
     }
     @Override

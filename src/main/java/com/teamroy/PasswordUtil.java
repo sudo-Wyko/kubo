@@ -1,4 +1,4 @@
-﻿package com.teamroy;
+package com.teamroy;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;

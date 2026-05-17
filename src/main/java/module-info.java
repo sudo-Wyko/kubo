@@ -1,4 +1,4 @@
-﻿module com.teamroy {
+module com.teamroy {
     requires transitive javafx.controls;
     requires transitive javafx.fxml;
     requires transitive java.sql;

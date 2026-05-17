@@ -1,4 +1,4 @@
-﻿package com.teamroy.controller;
+package com.teamroy.controller;
 import com.teamroy.model.dao.RoomDaoImpl;
 import com.teamroy.model.entity.Room;
 import javafx.collections.FXCollections;
@@ -136,7 +136,6 @@ public class AddRoomDialogController {
             room.SetRoomNumber(number);
             room.SetRoomType(type);
             room.SetCapacity(capacity);
-            room.SetCurrentOccupancy(0);
             room.SetPrice(price);
             roomDao.Create(room);
         } else {

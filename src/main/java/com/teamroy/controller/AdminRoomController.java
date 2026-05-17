@@ -1,4 +1,4 @@
-﻿package com.teamroy.controller;
+package com.teamroy.controller;
 import com.teamroy.CurrencyUtil;
 import com.teamroy.ConnectionManager;
 import com.teamroy.model.dao.MaintenanceRequestDaoImpl;

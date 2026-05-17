@@ -1,4 +1,4 @@
-﻿package com.teamroy;
+package com.teamroy;
 import java.text.NumberFormat;
 import java.util.Locale;
 public final class CurrencyUtil {

@@ -22,27 +22,11 @@
 
     <center>
         <HBox spacing="16" alignment="TOP_CENTER" styleClass="kanban-board">
-            <VBox fx:id="columnTotal" spacing="10" prefWidth="260" HBox.hgrow="ALWAYS">
-                <Label text="Total Requests" maxWidth="Infinity" alignment="CENTER"
-                       styleClass="kanban-header kanban-total"/>
-                <ScrollPane fitToWidth="true" styleClass="main-scroll-pane">
-                    <VBox fx:id="kanbanTotalBody" spacing="12" style="-fx-padding: 8;" styleClass="kanban-body"/>
-                </ScrollPane>
-            </VBox>
-
             <VBox fx:id="columnOpen" spacing="10" prefWidth="260" HBox.hgrow="ALWAYS">
                 <Label text="Open Requests" maxWidth="Infinity" alignment="CENTER"
                        styleClass="kanban-header kanban-open"/>
                 <ScrollPane fitToWidth="true" styleClass="main-scroll-pane">
                     <VBox fx:id="kanbanOpenBody" spacing="12" style="-fx-padding: 8;" styleClass="kanban-body"/>
-                </ScrollPane>
-            </VBox>
-
-            <VBox fx:id="columnUrgent" spacing="10" prefWidth="260" HBox.hgrow="ALWAYS">
-                <Label text="Urgent Requests" maxWidth="Infinity" alignment="CENTER"
-                       styleClass="kanban-header kanban-urgent"/>
-                <ScrollPane fitToWidth="true" styleClass="main-scroll-pane">
-                    <VBox fx:id="kanbanUrgentBody" spacing="12" style="-fx-padding: 8;" styleClass="kanban-body"/>
                 </ScrollPane>
             </VBox>
 

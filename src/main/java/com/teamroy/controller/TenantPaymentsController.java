@@ -1,4 +1,4 @@
-﻿package com.teamroy.controller;
+package com.teamroy.controller;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
@@ -11,6 +11,8 @@ import java.time.LocalDateTime;
 import java.sql.Connection;
 import com.teamroy.ConnectionManager;
 import com.teamroy.SessionManager;
+import com.teamroy.model.dao.LeaseDaoImpl;
+import com.teamroy.model.entity.Lease;
 import com.teamroy.model.entity.Payment;
 import com.teamroy.model.dao.PaymentDaoImpl;
 public class TenantPaymentsController {
@@ -22,6 +24,7 @@ public class TenantPaymentsController {
     private Button addPaymentBtn;
     private Connection conn = ConnectionManager.getConnection();
     private PaymentDaoImpl paymentDao = new PaymentDaoImpl(conn);
+    private LeaseDaoImpl leaseDao = new LeaseDaoImpl(conn);
     private int currentTenantId;
     @FXML
     public void initialize() {
@@ -41,11 +44,12 @@ public class TenantPaymentsController {
         String currentFilter = statusFilter.getValue();
         for (Payment payment : payments) {
             String status = payment.GetStatus() != null ? payment.GetStatus() : "PENDING";
+            System.out.println("Status: " + status);
             if (!"All".equalsIgnoreCase(currentFilter) && !status.equalsIgnoreCase(currentFilter)) {
                 continue;
             }
             String paymentId = "P-" + payment.GetPaymentID();
-            String tenantInfo = "Tenant ID: " + payment.GetTenantID();
+            String tenantInfo = "Lease #" + payment.GetLeaseID();
             String amount = String.format("%,.2f", payment.GetAmountPaid());
             String date = payment.GetPaymentDate() != null ? payment.GetPaymentDate().toLocalDate().toString() : "N/A";
             String method = payment.GetPaymentMethod() != null ? payment.GetPaymentMethod() : "N/A";
@@ -79,8 +83,14 @@ public class TenantPaymentsController {
             if (dialogButton == saveButtonType) {
                 try {
                     double amount = Double.parseDouble(amountField.getText());
+                    Lease activeLease = leaseDao.GetActiveLeaseByTenant(currentTenantId);
+                    if (activeLease == null) {
+                        Alert noLease = new Alert(Alert.AlertType.ERROR, "No active lease found for your account.");
+                        noLease.showAndWait();
+                        return null;
+                    }
                     Payment newPayment = new Payment();
-                    newPayment.SetTenantID(currentTenantId);
+                    newPayment.SetLeaseID(activeLease.GetLeaseID());
                     newPayment.SetAmountPaid(amount);
                     newPayment.SetPaymentDate(LocalDateTime.now());
                     newPayment.SetPaymentMethod(methodBox.getValue());
@@ -108,7 +118,7 @@ public class TenantPaymentsController {
         Region accentBar = new Region();
         accentBar.setPrefHeight(6);
         if (status.equalsIgnoreCase("VERIFIED")) {
-            accentBar.getStyleClass().add("receipt-accent-verfied");
+            accentBar.getStyleClass().add("receipt-accent-verified");
         } else if (status.equalsIgnoreCase("PENDING")) {
             accentBar.getStyleClass().add("receipt-accent-pending");
         } else {

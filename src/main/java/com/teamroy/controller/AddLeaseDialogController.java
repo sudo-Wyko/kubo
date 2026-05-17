@@ -1,4 +1,4 @@
-﻿package com.teamroy.controller;
+package com.teamroy.controller;
 import com.teamroy.model.dao.LeaseDaoImpl;
 import com.teamroy.model.dao.RoomDaoImpl;
 import com.teamroy.model.dao.TenantDaoImpl;

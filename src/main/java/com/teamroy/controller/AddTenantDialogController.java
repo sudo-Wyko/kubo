@@ -1,16 +1,20 @@
-﻿package com.teamroy.controller;
-import com.teamroy.PasswordUtil;
-import com.teamroy.model.dao.TenantDaoImpl;
-import com.teamroy.model.dao.UserAccountDaoImpl;
+package com.teamroy.controller;
+
+import com.teamroy.PhInputValidator;
+import com.teamroy.model.dao.DaoException;
 import com.teamroy.model.entity.Tenant;
-import com.teamroy.model.entity.UserAccount;
+import com.teamroy.service.TenantService;
 import javafx.fxml.FXML;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
+
 import java.sql.Connection;
+import java.util.Optional;
+
 public class AddTenantDialogController {
     @FXML
     private Label titleLabel;
@@ -30,22 +34,13 @@ public class AddTenantDialogController {
     private Label errorLabel;
     @FXML
     private Button saveButton;
-    private TenantDaoImpl tenantDao;
-    private UserAccountDaoImpl userDao;
+
+    private TenantService tenantService;
     private Tenant editingTenant;
     private Runnable onSuccess;
-    private void showError(String msg) {
-        errorLabel.setText(msg);
-        errorLabel.setManaged(true);
-        errorLabel.setVisible(true);
-    }
-    private void clearError() {
-        errorLabel.setManaged(false);
-        errorLabel.setVisible(false);
-    }
+
     public void configureCreate(Connection connection, Runnable onSuccessCallback) {
-        this.tenantDao = new TenantDaoImpl(connection);
-        this.userDao = new UserAccountDaoImpl(connection);
+        this.tenantService = new TenantService(connection);
         this.editingTenant = null;
         this.onSuccess = onSuccessCallback;
         titleLabel.setText("Add tenant");
@@ -59,9 +54,9 @@ public class AddTenantDialogController {
         passwordField.clear();
         clearError();
     }
+
     public void configureEdit(Connection connection, Tenant tenant, Runnable onSuccessCallback) {
-        this.tenantDao = new TenantDaoImpl(connection);
-        this.userDao = new UserAccountDaoImpl(connection);
+        this.tenantService = new TenantService(connection);
         this.editingTenant = tenant;
         this.onSuccess = onSuccessCallback;
         titleLabel.setText("Edit tenant");
@@ -71,62 +66,85 @@ public class AddTenantDialogController {
         emailField.setText(tenant.GetEmail() == null ? "" : tenant.GetEmail());
         usernameField.setDisable(true);
         passwordField.setDisable(true);
-        Integer userId = tenant.GetUserID();
-        if (userId != null) {
-            UserAccount acct = userDao.GetByID(userId);
-            if (acct != null) {
-                usernameField.setText(acct.GetUsername());
-            }
-        }
+        clearError();
     }
+
     @FXML
     private void save() {
         clearError();
         String firstName = safe(firstNameField.getText());
         String lastName = safe(lastNameField.getText());
         if (firstName.isBlank() || lastName.isBlank()) {
-            showError("First and last name are required.");
+            validationAlert("First and last name are required.");
             return;
         }
-        String contact = safe(contactField.getText());
+
+        String contactRaw = safe(contactField.getText());
+        Optional<String> contactError = PhInputValidator.validateContactRequired(contactRaw);
+        if (contactError.isPresent()) {
+            validationAlert(contactError.get());
+            return;
+        }
+        String contact = PhInputValidator.normalizePhone(contactRaw);
+
         String email = safe(emailField.getText());
+        Optional<String> emailError = PhInputValidator.validateEmailOptional(email);
+        if (emailError.isPresent()) {
+            validationAlert(emailError.get());
+            return;
+        }
+
         String username = safe(usernameField.getText());
         String password = passwordField.getText();
-        if (editingTenant == null) {
-            Integer userIdLink = null;
-            if (!username.isBlank()) {
-                if (password == null || password.isBlank()) {
-                    showError("Password is required when username is provided.");
-                    return;
-                }
-                if (userDao.GetByUsername(username) != null) {
-                    showError("Username already exists.");
-                    return;
-                }
-                UserAccount account = new UserAccount(username, PasswordUtil.hash(password), "TENANT");
-                userDao.Create(account);
-                userIdLink = account.GetUserID();
+
+        try {
+            if (editingTenant == null) {
+                tenantService.createTenant(firstName, lastName, contact, email, username, password);
+            } else {
+                editingTenant.SetFirstName(firstName);
+                editingTenant.SetLastName(lastName);
+                editingTenant.SetContactNumber(contact);
+                editingTenant.SetEmail(email.isBlank() ? null : email);
+                tenantService.updateTenant(editingTenant);
             }
-            Tenant tenant = new Tenant(firstName, lastName, contact, email, 0.0);
-            tenant.SetUserID(userIdLink);
-            tenantDao.Create(tenant);
-        } else {
-            editingTenant.SetFirstName(firstName);
-            editingTenant.SetLastName(lastName);
-            editingTenant.SetContactNumber(contact);
-            editingTenant.SetEmail(email);
-            tenantDao.Update(editingTenant);
+            if (onSuccess != null) {
+                onSuccess.run();
+            }
+            close();
+        } catch (DaoException ex) {
+            showError(ex.getMessage());
         }
-        if (onSuccess != null) {
-            onSuccess.run();
-        }
-        cancel();
     }
+
+    private void validationAlert(String message) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Invalid input");
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
+
+    private void showError(String msg) {
+        errorLabel.setText(msg);
+        errorLabel.setManaged(true);
+        errorLabel.setVisible(true);
+    }
+
+    private void clearError() {
+        errorLabel.setManaged(false);
+        errorLabel.setVisible(false);
+    }
+
     private static String safe(String text) {
         return text == null ? "" : text.trim();
     }
+
     @FXML
     private void cancel() {
+        close();
+    }
+
+    private void close() {
         Stage stage = (Stage) saveButton.getScene().getWindow();
         stage.close();
     }

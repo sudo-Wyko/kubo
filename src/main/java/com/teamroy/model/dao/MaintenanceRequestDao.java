@@ -1,4 +1,4 @@
-﻿package com.teamroy.model.dao;
+package com.teamroy.model.dao;
 import com.teamroy.model.entity.MaintenanceRequest;
 import java.util.List;
 public interface MaintenanceRequestDao extends GenericDao<MaintenanceRequest> {

@@ -15,9 +15,9 @@
     <Label text="Record payment" styleClass="dialog-title"/>
 
     <VBox spacing="6">
-        <Label text="Tenant"/>
-        <ComboBox fx:id="tenantCombo" maxWidth="Infinity" styleClass="form-control"/>
-        <Label fx:id="tenantLockedLabel" visible="false" managed="false"
+        <Label text="Lease"/>
+        <ComboBox fx:id="leaseCombo" maxWidth="Infinity" styleClass="form-control"/>
+        <Label fx:id="leaseLockedLabel" visible="false" managed="false"
                styleClass="card-title"/>
     </VBox>
 
