@@ -24,6 +24,7 @@ public class App extends Application {
         stage.setTitle("Kubo Property Management");
         applyStageIcons(stage);
         stage.setScene(scene);
+        stage.setMaximized(true);
         stage.show();
     }
     public static void setRoot(String fxml) throws IOException {
@@ -45,7 +46,7 @@ public class App extends Application {
         }
     }
     private static void applyStageIcons(Stage stage) {
-        try (InputStream is = App.class.getResourceAsStream("/com/teamroy/icon.png")) {
+        try (InputStream is = App.class.getResourceAsStream("/kubo_icon.png")) {
             if (is != null) {
                 stage.getIcons().add(new Image(is));
                 return;

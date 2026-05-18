@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.teamroy</groupId>
     <artifactId>kubo</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0.0</version>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -118,6 +118,23 @@
                         </configuration>
                     </execution>
                 </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.panteleyev</groupId>
+                <artifactId>jpackage-maven-plugin</artifactId>
+                <version>1.6.0</version>
+
+                <configuration>
+                    <name>Kubo</name>
+                    <type>APP_IMAGE</type>
+                    <destination>target/dist</destination>
+                    <input>target</input>
+                    <mainJar>kubo-1.0.0.jar</mainJar>
+                    <mainClass>com.teamroy.Launcher</mainClass>
+                    <winConsole>false</winConsole>
+                    <icon>src/main/resources/kubo_icon.ico</icon>
+                </configuration>
             </plugin>
         </plugins>
     </build>

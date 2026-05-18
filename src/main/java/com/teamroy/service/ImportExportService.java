@@ -81,6 +81,7 @@ public final class ImportExportService {
         Integer idxLastName = null;
         Integer idxEmail = null;
         Integer idxContact = null;
+        
         List<String> firstCols = splitCsv(lines.get(0));
         boolean hasHeaderRow = false;
         for (String column : firstCols) {
@@ -89,6 +90,7 @@ public final class ImportExportService {
                 break;
             }
         }
+        
         int startIdx;
         if (hasHeaderRow) {
             idxFirstName = columnIndex(firstCols, "first_name");
@@ -101,12 +103,14 @@ public final class ImportExportService {
                 return new int[]{0, lines.size()};
             }
         } else {
-            idxFirstName = 1;
-            idxLastName = 2;
-            idxEmail = 3;
-            idxContact = 4;
+            // FIX: Array entries are 0-indexed when parsing a raw file without headers
+            idxFirstName = 0; 
+            idxLastName = 1;
+            idxEmail = 2;
+            idxContact = 3;
             startIdx = 0;
         }
+        
         for (int i = startIdx; i < lines.size(); i++) {
             String raw = lines.get(i);
             if (raw == null || raw.isBlank()) {
@@ -114,20 +118,28 @@ public final class ImportExportService {
                 continue;
             }
             List<String> cols = splitCsv(raw);
+            
+            // Check that the line has enough parsed columns to fulfill required names
             if (cols.size() <= Math.max(idxFirstName, idxLastName)) {
                 skipped++;
                 continue;
             }
+            
             String firstName = unquote(cols.get(idxFirstName).trim());
             String lastName = unquote(cols.get(idxLastName).trim());
             String email = idxEmail != null && idxEmail < cols.size() ? unquote(cols.get(idxEmail).trim()) : "";
             String contact = idxContact != null && idxContact < cols.size() ? unquote(cols.get(idxContact).trim()) : "";
+            
             if (firstName.isBlank() || lastName.isBlank()) {
                 skipped++;
                 continue;
             }
+            
+            // Map strings into a structured object entity
             Tenant tenant = new Tenant(firstName, lastName, TenantDaoImpl.normalizeContact(contact), email);
-            tenant.SetUserID(null);
+            tenant.SetUserID(null); // Explicitly unlinked from a user account profile on initial import
+            
+            // Persist the transaction down to the storage engine
             dao.Create(tenant);
             imported++;
         }
