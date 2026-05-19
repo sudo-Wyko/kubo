@@ -32,7 +32,8 @@ public final class ConnectionManager {
                 String pass = props.getProperty(DatabaseConfig.KEY_PASSWORD, "");
 
                 if (host == null || dbName == null || user == null) {
-                    throw new RuntimeException("Database configuration is incomplete in config.properties.");
+                    throw new RuntimeException(
+                            "Database configuration is incomplete in " + DatabaseConfig.CONFIG_PATH + ".");
                 }
 
                 String fullUrl = DatabaseConfig.buildJdbcUrl(host, dbName);
@@ -78,7 +79,7 @@ public final class ConnectionManager {
         try {
             return DatabaseConfig.load();
         } catch (IOException e) {
-            throw new RuntimeException("Could not read config.properties.", e);
+            throw new RuntimeException("Could not read " + DatabaseConfig.CONFIG_PATH + ".", e);
         }
     }
 

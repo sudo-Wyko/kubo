@@ -9,7 +9,9 @@ import java.nio.file.Paths;
 import java.util.Properties;
 
 public final class DatabaseConfig {
-    public static final Path CONFIG_PATH = Paths.get("config.properties");
+    private static final String APP_FOLDER_NAME = "Kubo";
+
+    public static final Path CONFIG_PATH = resolveConfigPath();
     public static final String KEY_HOST = "db.host";
     public static final String KEY_NAME = "db.name";
     public static final String KEY_USER = "db.user";
@@ -18,6 +20,28 @@ public final class DatabaseConfig {
     public static final String DEFAULT_USER = "root";
 
     private DatabaseConfig() {
+    }
+
+    private static Path resolveConfigPath() {
+        Path configDir;
+        String os = System.getProperty("os.name", "").toLowerCase();
+        if (os.contains("win")) {
+            String appData = System.getenv("APPDATA");
+            if (appData == null || appData.isBlank()) {
+                appData = Paths.get(System.getProperty("user.home"), "AppData", "Roaming").toString();
+            }
+            configDir = Paths.get(appData, APP_FOLDER_NAME);
+        } else {
+            configDir = Paths.get(System.getProperty("user.home"), ".kubo");
+        }
+        return configDir.resolve("config.properties");
+    }
+
+    private static void ensureConfigDirectoryExists() throws IOException {
+        Path parent = CONFIG_PATH.getParent();
+        if (parent != null) {
+            Files.createDirectories(parent);
+        }
     }
 
     public static boolean exists() {
@@ -33,6 +57,7 @@ public final class DatabaseConfig {
     }
 
     public static void save(String host, String dbName, String user, String password) throws IOException {
+        ensureConfigDirectoryExists();
         Properties props = new Properties();
         props.setProperty(KEY_HOST, host);
         props.setProperty(KEY_NAME, dbName);
